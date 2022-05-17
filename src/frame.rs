@@ -2,13 +2,13 @@
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Utc};
 use crc::{Crc, CRC_32_ISO_HDLC};
-use eio::ReadExt;
 use std::any::Any;
 use std::io::Cursor;
 use std::io::Write;
 
 use crate::Item;
 use crate::item::{DataType, get_data_length, read_timestamp, write_timestamp, write_data};
+use crate::read_ext::ReadExt;
 
 const MAGIC_ID: u16 = 0xE3DC;
 const PROTOCOL_VERSION: u8 = 0x01;

@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, NaiveDateTime, Utc};
-use eio::ReadExt;
 use std::any::{Any, TypeId};
 use std::io::{Read, Write};
 use std::mem;
 
 use crate::ErrorCode;
+use crate::read_ext::ReadExt;
 
 const ITEM_HEADER_SIZE: u16 = 7; // tag: 4, type: 1, length; 2
 

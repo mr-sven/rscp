@@ -36,7 +36,7 @@ impl<'a> Client<'a> {
         let addr = addr_list.last().unwrap();
         info!("Connect to {}:{}", host, host_port);
 
-        let mut stream = TcpStream::connect(addr)?;
+        let stream = TcpStream::connect(addr)?;
         self.connected = true;
         self.connection = Some(Arc::new(Mutex::new(stream)));
         info!("Connected");

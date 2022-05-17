@@ -5,6 +5,7 @@ use std::any::Any;
 
 pub mod tags;
 
+mod read_ext;
 mod encryption;
 mod client;
 mod item;
