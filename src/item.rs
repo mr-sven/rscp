@@ -33,11 +33,19 @@ macro_rules! data_type_ext {
                 }
             }
         }
+
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                match self {
+                    $($name::$vn => write!(f, stringify!($vn))),*
+                }
+            }
+        }
     }
 }
 
 data_type_ext! {
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Debug, PartialEq)]
     #[repr(u8)]
     pub enum DataType {
         None = 0x00,
@@ -224,9 +232,9 @@ pub fn write_data<W: Write>(writer: &mut W, data_type: &DataType, data: Option<&
             DataType::Bool => {
                 let b = p.downcast_ref::<bool>().unwrap();
                 if *b {
-                    writer.write(&[0x00u8])?;
-                } else {
                     writer.write(&[0x01u8])?;
+                } else {
+                    writer.write(&[0x00u8])?;
                 }
             },
             DataType::Char8 => {
@@ -295,3 +303,108 @@ pub fn read_timestamp<R: Read>(reader: &mut R) -> Result<DateTime<Utc>> {
     let nanos = reader.read_le::<u32>()?;
     Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(seconds, nanos), Utc))
 }
+
+#[cfg(test)]
+macro_rules! test_data_cases {
+    () => {{
+        let test_cases: Vec<(DataType, Option<Box<dyn Any>>, Vec<u8>, u16)> = vec![
+            (DataType::None, None, vec![0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], mem::size_of::<()>() as u16),
+            (DataType::Bool, Some(Box::new(true)), vec![0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01], mem::size_of::<bool>() as u16),
+            (DataType::Char8, Some(Box::new(-1i8)), vec![0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0xff], mem::size_of::<i8>() as u16),
+            (DataType::UChar8, Some(Box::new(1u8)), vec![0x00, 0x00, 0x00, 0x00, 0x03, 0x01, 0x00, 0x01], mem::size_of::<u8>() as u16),
+            (DataType::Int16, Some(Box::new(-1i16)), vec![0x00, 0x00, 0x00, 0x00, 0x04, 0x02, 0x00, 0xff, 0xff], mem::size_of::<i16>() as u16),
+            (DataType::UInt16, Some(Box::new(1u16)), vec![0x00, 0x00, 0x00, 0x00, 0x05, 0x02, 0x00, 0x01, 0x00], mem::size_of::<u16>() as u16),
+            (DataType::Int32, Some(Box::new(-1i32)), vec![0x00, 0x00, 0x00, 0x00, 0x06, 0x04, 0x00, 0xff, 0xff, 0xff, 0xff], mem::size_of::<i32>() as u16),
+            (DataType::UInt32, Some(Box::new(1u32)), vec![0x00, 0x00, 0x00, 0x00, 0x07, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00], mem::size_of::<u32>() as u16),
+            (DataType::Int64, Some(Box::new(-1i64)), vec![0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff], mem::size_of::<i64>() as u16),
+            (DataType::UInt64, Some(Box::new(1u64)), vec![0x00, 0x00, 0x00, 0x00, 0x09, 0x08, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], mem::size_of::<u64>() as u16),
+            (DataType::Float32, Some(Box::new(1.0f32)), vec![0x00, 0x00, 0x00, 0x00, 0x0a, 0x04, 0x00, 0x00, 0x00, 0x80, 0x3f], mem::size_of::<f32>() as u16),
+            (DataType::Double64, Some(Box::new(1.0f64)), vec![0x00, 0x00, 0x00, 0x00, 0x0b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f], mem::size_of::<f64>() as u16),
+            // bitfield, not implemented
+            (DataType::String, Some(Box::new("Test".to_string())), vec![0x00, 0x00, 0x00, 0x00, 0x0d, 0x04, 0x00, 0x54, 0x65, 0x73, 0x74], 4),
+            (DataType::Container, Some(Box::new(vec![
+                Item::new(crate::tags::RSCP::AUTHENTICATION_USER.into(), "user".to_string()),
+                Item::new(crate::tags::RSCP::AUTHENTICATION_PASSWORD.into(), "pwd".to_string()),
+            ])), vec![0x00, 0x00, 0x00, 0x00, 0x0e, 0x15, 0x00, 2, 0, 0, 0, 13, 4, 0, 117, 115, 101, 114, 3, 0, 0, 0, 13, 3, 0, 112, 119, 100], 21),
+            (DataType::Timestamp, Some(Box::new(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(12345678, 123456), Utc))), vec![0x00, 0x00, 0x00, 0x00, 0x0f, 0x0c, 0x00, 78, 97, 188, 0, 0, 0, 0, 0, 64, 226, 1, 0], (mem::size_of::<i64>() + mem::size_of::<i32>()) as u16),
+            (DataType::ByteArray, Some(Box::new(vec![0x0fu8; 4])), vec![0x00, 0x00, 0x00, 0x00, 0x10, 0x04, 0x00, 0x0f, 0x0f, 0x0f, 0x0f], 4),
+            (DataType::Error, Some(Box::new(ErrorCode::NotHandled)), vec![0x00, 0x00, 0x00, 0x00, 0xff, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00], mem::size_of::<u32>() as u16),
+        ];
+        test_cases
+    }};
+}
+
+#[test]
+fn test_item_from_bytes() {
+    let test_cases = test_data_cases!();
+    for (data_type, data, data_buffer, _) in test_cases {
+        let mut buffer_size = data_buffer.len() as u16;
+        let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(data_buffer);
+        let item = Item::from_bytes(&mut buffer, &mut buffer_size).unwrap();
+        assert_eq!(item.tag, 0x00, "Test tag {:?}", data_type);
+    }
+}
+
+#[test]
+fn test_item_to_bytes() {
+    let test_cases = test_data_cases!();
+    for (data_type, data, result, _) in test_cases {
+        let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(Vec::new());
+        let item = Item { tag: 0x00, data: data };
+        item.to_bytes(&mut buffer).unwrap();
+        assert_eq!(buffer.get_ref().to_vec(), result, "Test {:?}", data_type);
+    };
+}
+
+#[test]
+fn test_get_data_length() {
+    let test_cases = test_data_cases!();
+    for (data_type, data, _, data_size) in test_cases {
+        let data_size_from_data = get_data_length(&data_type, data.as_ref()).unwrap();
+        assert_eq!(data_size, data_size_from_data, "Test {:?}", data_type);
+    }
+}
+
+#[test]
+fn test_get_container_size() {
+    let container_size = get_container_size(&vec![
+        Item::new(crate::tags::RSCP::AUTHENTICATION_USER.into(), "user".to_string()),
+        Item::new(crate::tags::RSCP::AUTHENTICATION_PASSWORD.into(), "pwd".to_string()),
+    ]).unwrap();
+    assert_eq!(container_size, 21);
+}
+
+#[test]
+fn test_get_data_type() {
+    let test_cases = test_data_cases!();
+    for (data_type, data, _, _) in test_cases {
+        let data_type_from_data = get_data_type(data.as_ref()).unwrap();
+        assert_eq!(data_type, data_type_from_data, "Test {:?}", data_type);
+    }
+}
+
+#[test]
+fn test_write_data() {    
+    let test_cases = test_data_cases!();
+    for (data_type, data, result, _) in test_cases {
+        let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(Vec::new());
+        write_data(&mut buffer, &data_type, data.as_ref()).unwrap();
+        assert_eq!(buffer.get_ref().to_vec(), result[ITEM_HEADER_SIZE as usize..], "Test {:?}", data_type);
+    }
+}
+
+#[test]
+fn test_write_timestamp() {    
+    let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(Vec::new());
+    write_timestamp(&mut buffer, &DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(12345678, 123456), Utc)).unwrap();
+    assert_eq!(buffer.get_ref().to_vec(), vec![78, 97, 188, 0, 0, 0, 0, 0, 64, 226, 1, 0]);
+}
+
+#[test]
+fn test_read_timestamp() {    
+    let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(vec![78, 97, 188, 0, 0, 0, 0, 0, 64, 226, 1, 0]);
+    let date_time = read_timestamp(&mut buffer).unwrap();
+    assert_eq!(date_time.timestamp(), 12345678);
+    assert_eq!(date_time.timestamp_subsec_nanos(), 123456);
+}
+

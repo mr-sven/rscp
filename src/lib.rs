@@ -45,6 +45,7 @@ macro_rules! error_code_ext {
 
 error_code_ext! {
     #[derive(Copy, Clone)]
+    #[derive(PartialEq, Debug)]
     #[repr(u32)]
     pub enum ErrorCode {
         NotHandled = 0x01,
@@ -124,4 +125,10 @@ impl GetItem for Item {
     fn get_item_data<T: 'static + Sized>(&self, tag: u32) -> Result<&T> {
         Ok(self.data.get_item_data(tag)?)
     }
+}
+
+#[test]
+fn test_error_code() {
+    assert_eq!(ErrorCode::from(0x01u32), ErrorCode::NotHandled, "Test From<u32>");
+    assert_eq!(Into::<u32>::into(ErrorCode::NotHandled), 0x01u32, "Test Into<u32>");
 }

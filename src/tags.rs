@@ -20,6 +20,7 @@ macro_rules! group_list {
         /// # Examples
         /// 
         /// ```
+        /// use rscp::tags::TagGroup;
         /// let rscp_group = TagGroup::from(0x00);
         /// println!("{}", rscp_group.tags(0x00000004)); // USER_LEVEL
         /// ``` 
@@ -54,6 +55,7 @@ macro_rules! group {
         macro_attr_callback! {
             $cb,
             $(#[$($attrs)*])*
+            #[derive(PartialEq, Debug)]
             pub enum $name {
                 $($vn = ($grp as u32) << 24 | $v),+
             }
@@ -87,6 +89,7 @@ macro_rules! group {
 group_list! {
     /// List of all tag groups
     #[allow(non_camel_case_types, dead_code)]
+    #[derive(PartialEq, Debug)]
     #[repr(u32)]
     pub enum TagGroup {
         RSCP = 0x00,
@@ -1815,4 +1818,17 @@ macro_attr! {
         CTRL_AWARD = 0x00000a,
         GENERAL_ERROR = 0x7fffff
     }
+}
+
+#[test]
+fn test_tag_group() {
+    assert_eq!(RSCP::AUTHENTICATION.to_string(), "RSCP_AUTHENTICATION", "Test fmt::Display");
+    assert_eq!(RSCP::from(0x01u32), RSCP::AUTHENTICATION, "Test From<u32>");
+    assert_eq!(Into::<u32>::into(RSCP::AUTHENTICATION), 0x01u32, "Test Into<u32>");
+}
+
+#[test]
+fn test_tag_groups() {
+    assert_eq!(TagGroup::from(0x00), TagGroup::RSCP, "Test From<u8>");
+    assert_eq!(TagGroup::RSCP.tags(0x01u32), "RSCP_AUTHENTICATION", "Test tags(u32)");
 }
