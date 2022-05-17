@@ -1,0 +1,27 @@
+[package]
+name = "rscp"
+version = "0.1.0"
+authors = ["Sven Fabricius <sven.fabricius@livediesel.de>"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/mr-sven/rust-rscp"
+description = "Rust implementation of E3DC RSCP"
+
+[lib]
+name = "rscp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "test_bin"
+path = "src/bin/bin.rs"
+
+[dependencies]
+macro-attr = "0.2.0"
+simple-rijndael = "0.3.1"
+chrono = "0.4"
+anyhow = "1.0"
+crc = "3.0"
+eio = "0.1"
+log = "0.4.17"
+env_logger = "0.9.0"
+
