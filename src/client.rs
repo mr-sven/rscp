@@ -1,8 +1,8 @@
 
 use anyhow::{anyhow, Result};
 use log::{info, warn};
-use std::io::Write;
-use std::net::{TcpStream, ToSocketAddrs};
+use std::io::{Write, Read};
+use std::net::{TcpStream, ToSocketAddrs, Shutdown};
 use std::sync::{Mutex, Arc};
 
 use crate::encryption::{RscpEncryption, BLOCK_SIZE};
@@ -37,6 +37,7 @@ impl<'a> Client<'a> {
         info!("Connect to {}:{}", host, host_port);
 
         let stream = TcpStream::connect(addr)?;
+        stream.set_read_timeout(Some(std::time::Duration::from_millis(500)))?;
         self.connected = true;
         self.connection = Some(Arc::new(Mutex::new(stream)));
         info!("Connected");
@@ -47,20 +48,37 @@ impl<'a> Client<'a> {
             Item::new(tags::RSCP::AUTHENTICATION_PASSWORD.into(), self.password.to_string()),
         ]));
 
-        let data = self.enc_processor.encrypt(frame.to_bytes()?)?;
+        let mut data = self.enc_processor.encrypt(frame.to_bytes()?)?;
 
         info!("Authenticate");
         self.write_to_stream(&data)?;
+        data = self.read_from_stream()?;
 
-        let mut data = [0 as u8; BLOCK_SIZE];
-
+        let dev = self.enc_processor.decrypt(data)?;
+        println!("{:02x?}", dev);
+        let frm = Frame::from_bytes(dev)?;
+        
+        self.connection.as_mut().unwrap().as_ref().lock().unwrap().shutdown(Shutdown::Both)?;
+        
         Ok(())
     }
 
-    fn write_to_stream(&mut self, data: &[u8]) -> Result<()> {        
-        self.connection.as_mut().unwrap()
-            .as_ref().lock().unwrap().by_ref()
-            .write(&data)?;
+    fn write_to_stream(&mut self, data: &[u8]) -> Result<()> { 
+        self.connection.as_mut().unwrap().as_ref().lock().unwrap().write(&data)?;
         Ok(())
+    }
+
+    fn read_from_stream(&mut self) -> Result<Vec<u8>> {
+        let mut buffer = [0 as u8; BLOCK_SIZE];
+        let mut data: Vec<u8> = Vec::new();
+        loop
+        {
+            match self.connection.as_mut().unwrap().as_ref().lock().unwrap().read_exact(&mut buffer) {
+                Ok(_) => { data.extend_from_slice(&buffer); },
+                Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => { break; },
+                Err(e) => return Err(anyhow!("error receiving data: {}", e))
+            }
+        };
+        Ok(data)
     }
 }

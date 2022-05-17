@@ -11,10 +11,6 @@ description = "Rust implementation of E3DC RSCP"
 name = "rscp"
 path = "src/lib.rs"
 
-[[bin]]
-name = "test_bin"
-path = "src/bin/bin.rs"
-
 [dependencies]
 anyhow = "1.0"
 
@@ -30,4 +26,6 @@ simple-rijndael = "0.3.1"
 chrono = "0.4"
 crc = "3.0"
 
-
+[[bin]]
+name = "test_bin"
+path = "src/bin/bin.rs"
