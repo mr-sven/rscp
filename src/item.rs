@@ -156,9 +156,37 @@ impl Item {
 impl std::fmt::Debug for Item {    
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         let tag_group = TagGroup::from((&self.tag >> 24) as u8);
+        let data = self.data.as_ref().unwrap();
+        let data_debug = get_debug_data(&data);
+        
         fmt.debug_struct("Item")
             .field("tag", &tag_group.tags(&self.tag & 0x7fffff))
+            .field("data", &data_debug)
             .finish()
+    }
+}
+
+fn get_debug_data(data: &Box<dyn Any>) -> Box<dyn Debug + '_> {
+    let current_id = (&**data).type_id();
+    match current_id {
+        x if x == TypeId::of::<bool>() => Box::new(data.downcast_ref::<bool>().unwrap()),
+        x if x == TypeId::of::<i8>() => Box::new(data.downcast_ref::<i8>().unwrap()),
+        x if x == TypeId::of::<u8>() => Box::new(data.downcast_ref::<u8>().unwrap()),
+        x if x == TypeId::of::<i16>() => Box::new(data.downcast_ref::<i16>().unwrap()),
+        x if x == TypeId::of::<u16>() => Box::new(data.downcast_ref::<u16>().unwrap()),
+        x if x == TypeId::of::<i32>() => Box::new(data.downcast_ref::<i32>().unwrap()),
+        x if x == TypeId::of::<u32>() => Box::new(data.downcast_ref::<u32>().unwrap()),
+        x if x == TypeId::of::<i64>() => Box::new(data.downcast_ref::<i64>().unwrap()),
+        x if x == TypeId::of::<u64>() => Box::new(data.downcast_ref::<u64>().unwrap()),
+        x if x == TypeId::of::<f32>() => Box::new(data.downcast_ref::<f32>().unwrap()),
+        x if x == TypeId::of::<f64>() => Box::new(data.downcast_ref::<f64>().unwrap()),
+        x if x == TypeId::of::<Vec<bool>>() => Box::new(data.downcast_ref::<Vec<bool>>().unwrap()),
+        x if x == TypeId::of::<String>() => Box::new(data.downcast_ref::<String>().unwrap()),
+        x if x == TypeId::of::<Vec<Item>>() => Box::new(data.downcast_ref::<Vec<Item>>().unwrap()),
+        x if x == TypeId::of::<DateTime<Utc>>() => Box::new(data.downcast_ref::<DateTime<Utc>>().unwrap()),
+        x if x == TypeId::of::<Vec<u8>>() => Box::new(data.downcast_ref::<Vec<u8>>().unwrap()),
+        x if x == TypeId::of::<ErrorCode>() => Box::new(data.downcast_ref::<ErrorCode>().unwrap()),
+        _ => Box::new("None")
     }
 }
 

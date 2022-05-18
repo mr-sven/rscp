@@ -1,7 +1,6 @@
 
-use anyhow::{anyhow, Result, bail};
+use anyhow::{Result, bail};
 use log::{info, warn, debug};
-use std::borrow::Borrow;
 use std::io::{Write, Read};
 use std::net::{TcpStream, ToSocketAddrs, Shutdown};
 use std::sync::{Mutex, Arc};
