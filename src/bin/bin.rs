@@ -30,7 +30,7 @@ fn main() {
     let g = tags::TagGroup::from(0);    
     info!("{}", g.tags(1));
 
-    let mut c = rscp::Client::new("efwef", "eefwef", "wgwegf");
+    let mut c = rscp::Client::new("efwef", "eefwef".to_string(), "wgwegf".to_string());
     match c.connect("127.0.0.1", None) {
         Ok(_) => (),
         Err(err) => {
