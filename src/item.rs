@@ -8,6 +8,7 @@ use crate::ErrorCode;
 use crate::read_ext::ReadExt;
 
 const ITEM_HEADER_SIZE: u16 = 7; // tag: 4, type: 1, length; 2
+const TAG_MASK: u32 = 0xff7fffff; // used to drop the unnessesary response bit
 
 macro_rules! data_type_ext {
     (
@@ -30,14 +31,6 @@ macro_rules! data_type_ext {
                 match orig {
                     $(x if x == $name::$vn as u8 => $name::$vn,)*
                     _ => $name::Error
-                }
-            }
-        }
-
-        impl std::fmt::Display for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                match self {
-                    $($name::$vn => write!(f, stringify!($vn))),*
                 }
             }
         }
@@ -153,7 +146,7 @@ impl Item {
         *length -= data_len + ITEM_HEADER_SIZE;
 
         Ok(Self {
-            tag: tag,
+            tag: tag & TAG_MASK,
             data: data
         })
     }

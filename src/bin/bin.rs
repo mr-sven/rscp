@@ -32,7 +32,9 @@ fn main() {
 
     let mut c = rscp::Client::new("efwef", "eefwef".to_string(), "wgwegf".to_string());
     match c.connect("127.0.0.1", None) {
-        Ok(_) => (),
+        Ok(_) => {
+            c.disconnect().unwrap();
+        },
         Err(err) => {
             warn!("Unable to connect: {:?}", err);
         }

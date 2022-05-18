@@ -43,6 +43,34 @@ macro_rules! error_code_ext {
     }
 }
 
+macro_rules! user_level_ext {
+    (
+        $(#[$($attrs:tt)*])*
+        pub enum $name:ident { $($vn:ident = $v:tt),+ }
+    ) => {
+        /// Error code result
+        $(#[$($attrs)*])*
+        pub enum $name {
+            $($vn = $v),+
+        }
+
+        impl Into<u8> for $name {
+            fn into(self) -> u8 {
+                self as u8
+            }
+        }
+
+        impl From<u8> for $name {
+            fn from(orig: u8) -> Self {
+                match orig {
+                    $(x if x == $name::$vn as u8 => $name::$vn,)*
+                    _ => $name::Unknown
+                }
+            }
+        }
+    }
+}
+
 error_code_ext! {
     #[derive(Copy, Clone)]
     #[derive(PartialEq, Debug)]
@@ -56,6 +84,22 @@ error_code_ext! {
         NotAvailable = 0x06,
         UnknownTag = 0x07,
         AlreadyInUse = 0x08,
+        Unknown = 0xff
+    }
+}
+
+user_level_ext! {
+    #[derive(Copy, Clone)]
+    #[derive(PartialEq, Debug)]
+    #[repr(u8)]
+    pub enum UserLevel {
+        NotAuthorized = 0,
+        User = 10,
+        Installer = 20,
+        Service = 30,
+        Admin = 40,
+        E3dc = 50,
+        E3dcRoot = 60,
         Unknown = 0xff
     }
 }
@@ -130,7 +174,8 @@ impl GetItem for Item {
 #[derive(Debug)] // Allow the use of "{:?}" format specifier
 pub enum Errors {
     Parse(String),
-    ReceiveNothing
+    ReceiveNothing,
+    AuthFailed
 }
 
 impl std::error::Error for Errors {}
@@ -139,7 +184,8 @@ impl std::fmt::Display for Errors {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Errors::Parse(ref msg) => write!(f, "Frame parse error: {}", msg),
-            Errors::ReceiveNothing => write!(f, "Receive Nothing")
+            Errors::ReceiveNothing => write!(f, "Receive nothing"),
+            Errors::AuthFailed => write!(f, "Authentication failed")
         }
     }
 }

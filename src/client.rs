@@ -1,12 +1,13 @@
 
 use anyhow::{anyhow, Result, bail};
 use log::{info, warn, debug};
+use std::borrow::Borrow;
 use std::io::{Write, Read};
 use std::net::{TcpStream, ToSocketAddrs, Shutdown};
 use std::sync::{Mutex, Arc};
 
 use crate::encryption::{RscpEncryption, BLOCK_SIZE};
-use crate::{tags, Item, Frame, Errors};
+use crate::{tags, Item, Frame, Errors, UserLevel};
 use crate::GetItem;
 
 const DEFAULT_PORT: u16 = 5033;
@@ -49,10 +50,23 @@ impl Client {
         ]));
 
         info!("Authenticate");
-        let result_frame = self.send_receive_frame(&frame);
+        match self.send_receive_frame(&frame) {
+            Ok(result_frame) => { 
+                let user_level = result_frame.get_item_data::<u8>(tags::RSCP::AUTHENTICATION.into()).unwrap();
+                let user_level_type = UserLevel::from(user_level.clone());
+                info!("Authenticated as {:?}", user_level_type);
+            },
+            Err(_) => {
+                self.disconnect()?;
+                bail!(Errors::AuthFailed)
+            }
+        }        
         
+        Ok(())
+    }
+
+    pub fn disconnect(&mut self) -> Result<()> {
         self.connection.as_mut().unwrap().as_ref().lock().unwrap().shutdown(Shutdown::Both)?;
-        
         Ok(())
     }
 
