@@ -22,7 +22,7 @@ env_logger = "0.9.0"
 macro-attr = "0.2.0"
 
 # rscp stuff
-simple-rijndael = "0.3.1"
+simple-rijndael = "0.3.2"
 chrono = "0.4"
 crc = "3.0"
 
