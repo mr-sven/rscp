@@ -11,16 +11,16 @@ use crate::GetItem;
 
 const DEFAULT_PORT: u16 = 5033;
 
-pub struct Client<'a> {
+pub struct Client {
     pub connected: bool,
     enc_processor: RscpEncryption,
     connection: Option<Arc<Mutex<TcpStream>>>,
-    username: &'a str,
-    password: &'a str,
+    username: String,
+    password: String,
 }
 
-impl<'a> Client<'a> {
-    pub fn new(rscp_key: &str, username: &'a str, pasword: &'a str) -> Self {
+impl Client {
+    pub fn new(rscp_key: &str, username: String, pasword: String) -> Self {
         Self {
             connected: false,
             connection: None,
@@ -54,6 +54,7 @@ impl<'a> Client<'a> {
         self.write_to_stream(&data)?;
         data = self.read_from_stream()?;
 
+        println!("{:02x?}", data);
         let dev = self.enc_processor.decrypt(data)?;
         println!("{:02x?}", dev);
         let frm = Frame::from_bytes(dev)?;
@@ -76,7 +77,7 @@ impl<'a> Client<'a> {
             match self.connection.as_mut().unwrap().as_ref().lock().unwrap().read_exact(&mut buffer) {
                 Ok(_) => { data.extend_from_slice(&buffer); },
                 Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => { break; },
-                Err(e) => return Err(anyhow!("error receiving data: {}", e))
+                Err(e) => {break;}//return Err(anyhow!("error receiving data: {}", e))
             }
         };
         Ok(data)
