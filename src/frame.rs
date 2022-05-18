@@ -1,12 +1,12 @@
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, bail};
 use chrono::{DateTime, Utc};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use std::any::Any;
 use std::io::Cursor;
 use std::io::Write;
 
-use crate::Item;
+use crate::{Item, Errors};
 use crate::item::{DataType, get_data_length, read_timestamp, write_timestamp, write_data};
 use crate::read_ext::ReadExt;
 
@@ -80,7 +80,7 @@ impl Frame {
 
         // magic ID is big endian
         if buffer.read_be::<u16>()? != MAGIC_ID {
-            return Err(anyhow!("Invalid magic header"));
+            bail!(Errors::Parse("Invalid magic header".to_string()))
         }
 
         // documentation missmatch of version flag
@@ -89,7 +89,7 @@ impl Frame {
         // protocol version and checksum flag
         let prot_ver = buffer.read_le::<u8>()?;
         if prot_ver & PROTOCOL_VERSION_MASK != PROTOCOL_VERSION {
-            return Err(anyhow!("Invalid Protocol version, got {:?}", prot_ver));
+            bail!(Errors::Parse(format!("Invalid Protocol version, got {:?}", prot_ver)))
         }
 
         let with_checksum = if prot_ver & WITH_CHECKSUM == WITH_CHECKSUM {
@@ -122,7 +122,7 @@ impl Frame {
         // read checksum
         let cksum = buffer.read_le::<u32>()?;
         if cksum != sum {
-            return Err(anyhow!("CRC Checksum missmatch, got {:?} = {:?}", cksum, sum));
+            bail!(Errors::Parse(format!("CRC Checksum missmatch, got {:?} = {:?}", cksum, sum)))
         }
 
         // set position back to data

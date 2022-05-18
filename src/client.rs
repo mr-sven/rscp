@@ -1,12 +1,12 @@
 
-use anyhow::{anyhow, Result};
-use log::{info, warn};
+use anyhow::{anyhow, Result, bail};
+use log::{info, warn, debug};
 use std::io::{Write, Read};
 use std::net::{TcpStream, ToSocketAddrs, Shutdown};
 use std::sync::{Mutex, Arc};
 
 use crate::encryption::{RscpEncryption, BLOCK_SIZE};
-use crate::{tags, Item, Frame};
+use crate::{tags, Item, Frame, Errors};
 use crate::GetItem;
 
 const DEFAULT_PORT: u16 = 5033;
@@ -48,16 +48,8 @@ impl Client {
             Item::new(tags::RSCP::AUTHENTICATION_PASSWORD.into(), self.password.to_string()),
         ]));
 
-        let mut data = self.enc_processor.encrypt(frame.to_bytes()?)?;
-
         info!("Authenticate");
-        self.write_to_stream(&data)?;
-        data = self.read_from_stream()?;
-
-        println!("{:02x?}", data);
-        let dev = self.enc_processor.decrypt(data)?;
-        println!("{:02x?}", dev);
-        let frm = Frame::from_bytes(dev)?;
+        let result_frame = self.send_receive_frame(&frame);
         
         self.connection.as_mut().unwrap().as_ref().lock().unwrap().shutdown(Shutdown::Both)?;
         
@@ -77,9 +69,27 @@ impl Client {
             match self.connection.as_mut().unwrap().as_ref().lock().unwrap().read_exact(&mut buffer) {
                 Ok(_) => { data.extend_from_slice(&buffer); },
                 Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => { break; },
-                Err(e) => {break;}//return Err(anyhow!("error receiving data: {}", e))
+                Err(e) => { break; } //return Err(anyhow!("error receiving data: {}", e))
             }
         };
         Ok(data)
+    }
+
+    fn send_receive_frame(&mut self, frame: &Frame) -> Result<Frame> {
+
+        let data = frame.to_bytes()?;
+        debug!(">> Frame: {:02x?}", data);
+        let enc_data = self.enc_processor.encrypt(data)?;
+
+        self.write_to_stream(&enc_data)?;
+        let return_enc_data = self.read_from_stream()?;
+        if return_enc_data.len() == 0 {
+            bail!(Errors::ReceiveNothing)
+        }
+
+        let return_data = self.enc_processor.decrypt(return_enc_data)?;
+        debug!("<< Frame: {:02x?}", return_data);
+
+        Ok(Frame::from_bytes(return_data)?)
     }
 }

@@ -127,6 +127,23 @@ impl GetItem for Item {
     }
 }
 
+#[derive(Debug)] // Allow the use of "{:?}" format specifier
+pub enum Errors {
+    Parse(String),
+    ReceiveNothing
+}
+
+impl std::error::Error for Errors {}
+
+impl std::fmt::Display for Errors {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Errors::Parse(ref msg) => write!(f, "Frame parse error: {}", msg),
+            Errors::ReceiveNothing => write!(f, "Receive Nothing")
+        }
+    }
+}
+
 #[test]
 fn test_error_code() {
     assert_eq!(ErrorCode::from(0x01u32), ErrorCode::NotHandled, "Test From<u32>");
