@@ -3,6 +3,7 @@ use anyhow::{Result, bail};
 use chrono::{DateTime, Utc};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use std::any::Any;
+use std::fmt::Debug;
 use std::io::Cursor;
 use std::io::Write;
 
@@ -143,3 +144,14 @@ impl Frame {
     }
 }
 
+
+impl Debug for Frame {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let items = self.items.as_ref().unwrap().downcast_ref::<Vec<Item>>().unwrap();
+        f.debug_struct("Frame")
+            .field("with_checksum", &self.with_checksum)
+            .field("time_stamp", &self.time_stamp)
+            .field("items", items)
+            .finish()
+    }
+}

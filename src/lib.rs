@@ -2,6 +2,7 @@
 
 use anyhow::{anyhow, Result};
 use std::any::Any;
+use std::fmt::Debug;
 
 pub mod tags;
 

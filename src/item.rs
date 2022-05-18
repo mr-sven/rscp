@@ -1,11 +1,13 @@
 use anyhow::{Result, anyhow};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use std::any::{Any, TypeId};
+use std::fmt::Debug;
 use std::io::{Read, Write};
 use std::mem;
 
-use crate::ErrorCode;
+use crate::{ErrorCode};
 use crate::read_ext::ReadExt;
+use crate::tags::TagGroup;
 
 const ITEM_HEADER_SIZE: u16 = 7; // tag: 4, type: 1, length; 2
 const TAG_MASK: u32 = 0xff7fffff; // used to drop the unnessesary response bit
@@ -62,7 +64,6 @@ data_type_ext! {
     }
 }
 
-#[derive(Debug)]
 pub struct Item {
     pub tag: u32,
     pub data: Option<Box<dyn Any>>
@@ -149,6 +150,15 @@ impl Item {
             tag: tag & TAG_MASK,
             data: data
         })
+    }
+}
+
+impl std::fmt::Debug for Item {    
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let tag_group = TagGroup::from((&self.tag >> 24) as u8);
+        fmt.debug_struct("Item")
+            .field("tag", &tag_group.tags(&self.tag & 0x7fffff))
+            .finish()
     }
 }
 
