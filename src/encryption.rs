@@ -1,5 +1,4 @@
-use anyhow::{anyhow, Result};
-use simple_rijndael::Errors;
+use anyhow::Result;
 use simple_rijndael::impls::RijndaelCbc;
 use simple_rijndael::paddings::ZeroPadding;
 
@@ -35,10 +34,7 @@ impl RscpEncryption {
     pub fn encrypt(&mut self, data: Vec<u8>) -> Result<Vec<u8>> {
     
         // encrypt the data using key an enc iv
-        let result = RijndaelCbc::<ZeroPadding>::new(&self.key, BLOCK_SIZE)
-            .map_err(|error| to_anyhow(error))?
-            .encrypt(&self.enc_iv, data)
-            .map_err(|error| to_anyhow(error))?;
+        let result = RijndaelCbc::<ZeroPadding>::new(&self.key, BLOCK_SIZE)?.encrypt(&self.enc_iv, data)?;
 
         // store enc iv back for next encryption
         self.enc_iv.clone_from_slice(&result[result.len() - 32..]);
@@ -49,23 +45,12 @@ impl RscpEncryption {
     pub fn decrypt(&mut self, data: Vec<u8>) -> Result<Vec<u8>> {
 
         // decrypt the data using key an enc iv
-        let result = RijndaelCbc::<ZeroPadding>::new(&self.key, BLOCK_SIZE)
-            .map_err(|error| to_anyhow(error))?
-            .decrypt(&self.dec_iv, data.to_vec())
-            .map_err(|error| to_anyhow(error))?;
+        let result = RijndaelCbc::<ZeroPadding>::new(&self.key, BLOCK_SIZE)?.decrypt(&self.dec_iv, data.to_vec())?;
 
         // store enc iv back for next encryption
         self.dec_iv.clone_from_slice(&data[data.len() - 32..]);
 
         Ok(result)
-    }
-}
-
-fn to_anyhow(error: Errors) -> anyhow::Error {
-    match error {
-        Errors::InvalidDataSize => anyhow!("InvalidDataSize"),
-        Errors::InvalidBlockSize => anyhow!("InvalidBlockSize"),
-        Errors::InvalidKeySize => anyhow!("InvalidKeySize"),
     }
 }
 
