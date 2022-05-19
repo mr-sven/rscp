@@ -70,7 +70,7 @@ impl Client {
     /// match c.connect("energy.storage.local", None) {
     ///     Ok(_) => (),
     ///     Err(err) => {
-    ///         panic!("Unable to connect: {:?}", err);#
+    ///         panic!("Unable to connect: {:?}", err);
     ///     }
     /// }
     /// ```
@@ -130,7 +130,7 @@ impl Client {
     /// match c.connect("energy.storage.local", None) {
     ///     Ok(_) => (),
     ///     Err(err) => {
-    ///         panic!("Unable to connect: {:?}", err);#
+    ///         panic!("Unable to connect: {:?}", err);
     ///     }
     /// }
     /// 
