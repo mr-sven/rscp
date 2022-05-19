@@ -4,8 +4,11 @@ version = "0.1.0"
 authors = ["Sven Fabricius <sven.fabricius@livediesel.de>"]
 edition = "2021"
 license = "MIT"
+readme = "README.md"
 repository = "https://github.com/mr-sven/rust-rscp"
 description = "Rust implementation of E3DC RSCP"
+categories = ["network-programming", "no-std"]
+keywords = ["e3dc", "energy_storage"]
 
 [lib]
 name = "rscp"
