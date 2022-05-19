@@ -9,8 +9,11 @@ use crate::{ErrorCode, GetItem};
 use crate::read_ext::ReadExt;
 use crate::tags::TagGroup;
 
-const ITEM_HEADER_SIZE: u16 = 7; // tag: 4, type: 1, length; 2
-const TAG_MASK: u32 = 0xff7fffff; // used to drop the unnessesary response bit
+/// Site of item header - tag: 4, type: 1, length; 2
+const ITEM_HEADER_SIZE: u16 = 7;
+
+/// bitmask to drop response bit
+const TAG_MASK: u32 = 0xff7fffff;
 
 macro_rules! data_type_ext {
     (

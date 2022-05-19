@@ -11,18 +11,39 @@ use crate::{Item, Errors, GetItem};
 use crate::item::{DataType, get_data_length, read_timestamp, write_timestamp, write_data};
 use crate::read_ext::ReadExt;
 
+/// the protocol magic id for rscp frame
 const MAGIC_ID: u16 = 0xE3DC;
+
+/// version of protocol
 const PROTOCOL_VERSION: u8 = 0x01;
+
+/// bitmask for protocol
 const PROTOCOL_VERSION_MASK: u8 = 0x0F;
+
+/// with checksum flag of frame
 const WITH_CHECKSUM: u8 = 0x10;
 
+/// RSCP data frame
 pub struct Frame {
+    /// true if frame contains checksum
     pub with_checksum: bool,
+
+    /// the timestamp of the frame
     pub time_stamp: DateTime<Utc>,
+
+    /// contains data items
     pub items: Option<Box<dyn Any>> 
 }
 
 impl Frame {
+    /// Returns a frame
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use rscp::Frame;
+    /// let frame = Frame::new();
+    /// ```
     pub fn new() -> Self {
         Self {
             with_checksum: true,
@@ -31,12 +52,35 @@ impl Frame {
         }
     }
 
+    /// Appends data item to current frame
+    /// 
+    /// # Arguments
+    /// 
+    /// * `item` - the data item
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use rscp::{tags, Item, Frame};
+    /// let mut info_frame = Frame::new();
+    /// info_frame.push_item(Item { tag: tags::INFO::SERIAL_NUMBER.into(), data: None } );
+    /// ```
     pub fn push_item(&mut self, item: Item) {
         let items_box = self.items.as_mut().unwrap();
         let items_vector = items_box.downcast_mut::<Vec<Item>>().unwrap();
         items_vector.push(item);
     }
 
+    /// Returns data frame a byte vector
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use rscp::{tags, Item, Frame};
+    /// let mut info_frame = Frame::new();
+    /// info_frame.push_item(Item { tag: tags::INFO::SERIAL_NUMBER.into(), data: None } );
+    /// let frame_bytes = info_frame.to_bytes();
+    /// ```
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         let data_length = get_data_length(&DataType::Container, self.items.as_ref())?;
         let crc_sum: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
@@ -74,6 +118,15 @@ impl Frame {
         Ok(buffer.get_ref().to_vec())
     }
 
+
+    /// Returns data frame from a byte vector
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use rscp::Frame;
+    /// let frame = Frame::from_bytes(vec![0xe3, 0xdc, 0x00, 0x11, 0x95, 0x23, 0x86, 0x62, 0x00, 0x00, 0x00, 0x00, 0x90, 0x1d, 0x45, 0x35, 0x08, 0x00, 0x01, 0x00, 0x80, 0x00, 0x03, 0x01, 0x00, 0x0a, 0x0f, 0x24, 0x01, 0x23, 0x00, 0x00]);
+    /// ```
     pub fn from_bytes(data: Vec<u8>) -> Result<Self> {
 
         let mut buffer: Cursor<Vec<u8>> = Cursor::new(data);
