@@ -2,15 +2,28 @@ use anyhow::Result;
 use simple_rijndael::impls::RijndaelCbc;
 use simple_rijndael::paddings::ZeroPadding;
 
+/// size of encyption blocks
 pub const BLOCK_SIZE: usize = 32;
 
+
+/// Encryption container
 pub struct RscpEncryption {
+    /// Rijndael Key
     key: [u8; BLOCK_SIZE],
+
+    /// encoding vector
     enc_iv: [u8; BLOCK_SIZE],
+
+    // decoding vector
     dec_iv: [u8; BLOCK_SIZE]
 }
 
 impl RscpEncryption {
+    /// Returns encryption object for rscp client
+    /// 
+    /// # Arguments
+    /// 
+    /// * `rscp_key` - key for RSCP encryption
     pub fn new(rscp_key: &str) -> Self {
         
         let rscp_key_bytes = rscp_key.as_bytes();
@@ -31,6 +44,11 @@ impl RscpEncryption {
         }
     }
 
+    /// encrypts data using key and enc iv and saves new iv
+    /// 
+    /// # Arguments
+    /// 
+    /// * `data` - data to encrypt
     pub fn encrypt(&mut self, data: Vec<u8>) -> Result<Vec<u8>> {
     
         // encrypt the data using key an enc iv
@@ -42,6 +60,11 @@ impl RscpEncryption {
         Ok(result)
     }
 
+    /// decrypts data using key and dec iv and saves new iv
+    /// 
+    /// # Arguments
+    /// 
+    /// * `data` - data to decrypt
     pub fn decrypt(&mut self, data: Vec<u8>) -> Result<Vec<u8>> {
 
         // decrypt the data using key an enc iv

@@ -179,7 +179,8 @@ impl GetItem for Option<Box<dyn Any>> {
 pub enum Errors {
     Parse(String),
     ReceiveNothing,
-    AuthFailed
+    AuthFailed,
+    NotConnected
 }
 
 impl std::error::Error for Errors {}
@@ -189,7 +190,8 @@ impl std::fmt::Display for Errors {
         match self {
             Errors::Parse(ref msg) => write!(f, "Frame parse error: {}", msg),
             Errors::ReceiveNothing => write!(f, "Receive nothing"),
-            Errors::AuthFailed => write!(f, "Authentication failed")
+            Errors::AuthFailed => write!(f, "Authentication failed"),
+            Errors::NotConnected => write!(f, "Not Connected")
         }
     }
 }

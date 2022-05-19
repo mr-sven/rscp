@@ -9,27 +9,71 @@ use crate::encryption::{RscpEncryption, BLOCK_SIZE};
 use crate::{tags, Item, Frame, Errors, UserLevel};
 use crate::GetItem;
 
+/// default RSCP Port
 const DEFAULT_PORT: u16 = 5033;
 
+/// RSCP Client object
 pub struct Client {
+    /// Connection status
     pub connected: bool,
+
+    /// the encryption and decryption processor
     enc_processor: RscpEncryption,
+
+    /// the connection stream as mutex
     connection: Option<Arc<Mutex<TcpStream>>>,
+
+    /// the username for connection
     username: String,
+
+    /// password for connection
     password: String,
 }
 
 impl Client {
-    pub fn new(rscp_key: &str, username: String, pasword: String) -> Self {
+    /// returns RSCP Client
+    /// 
+    /// # Arguments
+    /// 
+    /// * `rscp_key` - RSCP encyption key
+    /// * `username` - RSCP username
+    /// * `password` - RSCP password
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use rscp;
+    /// let mut c = rscp::Client::new("RSCP_KEY", "RSCP_USER".to_string(), "RSCP_PASSWORD".to_string());
+    /// ```
+    pub fn new(rscp_key: &str, username: String, password: String) -> Self {
         Self {
             connected: false,
             connection: None,
             enc_processor: RscpEncryption::new(rscp_key),
             username: username,
-            password: pasword
+            password
         }
     }
 
+    /// Connects to given host
+    /// 
+    /// # Arguments
+    /// 
+    /// * `host` - Host addess of energy storage
+    /// * `port` - Optional port, default 5033
+    /// 
+    /// # Examples
+    /// 
+    /// ```no_run
+    /// use rscp;
+    /// let mut c = rscp::Client::new("RSCP_KEY", "RSCP_USER".to_string(), "RSCP_PASSWORD".to_string());
+    /// match c.connect("energy.storage.local", None) {
+    ///     Ok(_) => (),
+    ///     Err(err) => {
+    ///         panic!("Unable to connect: {:?}", err);#
+    ///     }
+    /// }
+    /// ```
     pub fn connect(&mut self, host: &str, port: Option<u16>) -> Result<()> {
         let host_port = port.unwrap_or(DEFAULT_PORT);
         let addr_list = format!("{}:{}", host, host_port).to_socket_addrs()?;
@@ -64,30 +108,44 @@ impl Client {
         Ok(())
     }
 
+    /// Disconnects from host
     pub fn disconnect(&mut self) -> Result<()> {
+        self.connected = false;
         self.connection.as_mut().unwrap().as_ref().lock().unwrap().shutdown(Shutdown::Both)?;
         Ok(())
     }
 
-    fn write_to_stream(&mut self, data: &[u8]) -> Result<()> { 
-        self.connection.as_mut().unwrap().as_ref().lock().unwrap().write(&data)?;
-        Ok(())
-    }
-
-    fn read_from_stream(&mut self) -> Result<Vec<u8>> {
-        let mut buffer = [0 as u8; BLOCK_SIZE];
-        let mut data: Vec<u8> = Vec::new();
-        loop
-        {
-            match self.connection.as_mut().unwrap().as_ref().lock().unwrap().read_exact(&mut buffer) {
-                Ok(_) => { data.extend_from_slice(&buffer); },
-                Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => { break; },
-                Err(_) => { break; } //return Err(anyhow!("error receiving data: {}", e))
-            }
-        };
-        Ok(data)
-    }
-
+    /// Sends and receives frame from connection
+    /// 
+    /// # Arguments
+    /// 
+    /// * `frame` - frame to send
+    /// 
+    /// # Examples
+    /// 
+    /// ```no_run
+    /// use rscp;
+    /// use rscp::GetItem;
+    /// let mut c = rscp::Client::new("RSCP_KEY", "RSCP_USER".to_string(), "RSCP_PASSWORD".to_string());
+    /// match c.connect("energy.storage.local", None) {
+    ///     Ok(_) => (),
+    ///     Err(err) => {
+    ///         panic!("Unable to connect: {:?}", err);#
+    ///     }
+    /// }
+    /// 
+    /// let mut info_frame = rscp::Frame::new();
+    /// info_frame.push_item(rscp::Item { tag: rscp::tags::INFO::SERIAL_NUMBER.into(), data: None } );
+    /// 
+    /// match c.send_receive_frame(&info_frame) {
+    ///     Ok(result_frame) => {
+    ///         println!("{}", result_frame.get_item_data::<String>(rscp::tags::INFO::SERIAL_NUMBER.into()).unwrap());
+    ///     },
+    ///     Err(err) => {
+    ///         println!("Unable send: {:?}", err);
+    ///     }
+    /// }
+    /// ```
     pub fn send_receive_frame(&mut self, frame: &Frame) -> Result<Frame> {
         debug!("<< {:?}", frame);
         let data = frame.to_bytes()?;
@@ -107,5 +165,36 @@ impl Client {
         debug!(">> {:?}", result_frame);
 
         Ok(result_frame)
+    }
+
+    /// writes data to stream
+    /// 
+    /// # Arguments
+    /// 
+    /// * `data` - data to send
+    fn write_to_stream(&mut self, data: &[u8]) -> Result<()> {
+        if !self.connected {
+            bail!(Errors::NotConnected)
+        }
+        self.connection.as_mut().unwrap().as_ref().lock().unwrap().write(&data)?;
+        Ok(())
+    }
+
+    /// reads data from stream
+    fn read_from_stream(&mut self) -> Result<Vec<u8>> {
+        if !self.connected {
+            bail!(Errors::NotConnected)
+        }
+        let mut buffer = [0 as u8; BLOCK_SIZE];
+        let mut data: Vec<u8> = Vec::new();
+        loop
+        {
+            match self.connection.as_mut().unwrap().as_ref().lock().unwrap().read_exact(&mut buffer) {
+                Ok(_) => { data.extend_from_slice(&buffer); },
+                Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => { break; },
+                Err(_) => { break; } //return Err(anyhow!("error receiving data: {}", e))
+            }
+        };
+        Ok(data)
     }
 }
