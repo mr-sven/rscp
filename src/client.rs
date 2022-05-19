@@ -90,7 +90,7 @@ impl Client {
         Ok(data)
     }
 
-    fn send_receive_frame(&mut self, frame: &Frame) -> Result<Frame> {
+    pub fn send_receive_frame(&mut self, frame: &Frame) -> Result<Frame> {
 
         let data = frame.to_bytes()?;
         debug!("<< Frame: {:02x?}", data);
