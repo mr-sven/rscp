@@ -16,8 +16,7 @@ Ths lib is in early stage.
 # Usage
 
 ```rust
-use rscp::tags;
-use rscp;
+use rscp::{tags, GetItem, Frame, Item};
 
 let mut c = rscp::Client::new("RSCP_KEY", "RSCP_USER".to_string(), "RSCP_PASSWORD".to_string());
 match c.connect("energy.storage.local", None) {
