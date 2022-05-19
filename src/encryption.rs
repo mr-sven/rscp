@@ -22,7 +22,7 @@ impl RscpEncryption {
             rscp_key_bytes.len()
         };
     
-        key[..len].clone_from_slice(&rscp_key_bytes);
+        key[..len].clone_from_slice(&rscp_key_bytes[..len]);
 
         Self {
             key: key,
@@ -52,6 +52,19 @@ impl RscpEncryption {
 
         Ok(result)
     }
+}
+
+/// ################################################
+///      TEST TEST TEST
+/// ################################################
+
+#[test]
+fn test_key_size() {
+    let enc = RscpEncryption::new("00011122233344455566677788899900");
+    assert_eq!(enc.key.len(), BLOCK_SIZE);
+
+    let enc2 = RscpEncryption::new("000111222333444555666777888999000");
+    assert_eq!(enc2.key.len(), BLOCK_SIZE);
 }
 
 #[test]

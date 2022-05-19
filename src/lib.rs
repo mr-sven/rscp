@@ -159,8 +159,20 @@ impl std::fmt::Display for Errors {
     }
 }
 
+/// ################################################
+///      TEST TEST TEST
+/// ################################################
+
 #[test]
 fn test_error_code() {
     assert_eq!(ErrorCode::from(0x01u32), ErrorCode::NotHandled, "Test From<u32>");
     assert_eq!(Into::<u32>::into(ErrorCode::NotHandled), 0x01u32, "Test Into<u32>");
+    assert_eq!(ErrorCode::from(0xffffu32), ErrorCode::Unknown, "Test From Unknown<u32>");
+}
+
+#[test]
+fn test_user_level() {
+    assert_eq!(UserLevel::from(10), UserLevel::User, "Test From<u8>");
+    assert_eq!(Into::<u8>::into(UserLevel::User), 10, "Test Into<u8>");
+    assert_eq!(UserLevel::from(0xfe), UserLevel::Unknown, "Test From Unknown<u8>");
 }

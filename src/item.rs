@@ -103,14 +103,7 @@ impl Item {
 
         let data: Option<Box<dyn Any>> = match data_type {
             DataType::None => None,
-            DataType::Bool => {
-                let b = reader.read_le::<u8>()?;
-                if b == 0x01 {
-                    Some(Box::new(true))
-                } else {
-                    Some(Box::new(false))
-                }
-            },
+            DataType::Bool => Some(Box::new(reader.read_le::<u8>()? == 0x01)),
             DataType::Char8 => Some(Box::new(reader.read_le::<i8>()?)),
             DataType::UChar8 => Some(Box::new(reader.read_le::<u8>()?)),
             DataType::Int16 => Some(Box::new(reader.read_le::<i16>()?)),
@@ -275,7 +268,7 @@ pub fn write_data<W: Write>(writer: &mut W, data_type: &DataType, data: Option<&
 
     if let Some(p) = data {
         match data_type {
-            DataType::None => {},
+            DataType::None => (),
             DataType::Bool => {
                 let b = p.downcast_ref::<bool>().unwrap();
                 if *b {
@@ -351,12 +344,24 @@ pub fn read_timestamp<R: Read>(reader: &mut R) -> Result<DateTime<Utc>> {
     Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(seconds, nanos), Utc))
 }
 
+/// ################################################
+///      TEST TEST TEST
+/// ################################################
+
+#[test]
+fn test_data_type() {
+    assert_eq!(DataType::from(0x01), DataType::Bool, "Test From<u8>");
+    assert_eq!(Into::<u8>::into(DataType::Bool), 0x01, "Test Into<u8>");
+    assert_eq!(DataType::from(0xfe), DataType::Error, "Test From<u8>");
+}
+
 #[cfg(test)]
 macro_rules! test_data_cases {
     () => {{
         let test_cases: Vec<(DataType, Option<Box<dyn Any>>, Vec<u8>, u16)> = vec![
             (DataType::None, None, vec![0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], mem::size_of::<()>() as u16),
             (DataType::Bool, Some(Box::new(true)), vec![0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01], mem::size_of::<bool>() as u16),
+            (DataType::Bool, Some(Box::new(false)), vec![0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00], mem::size_of::<bool>() as u16),
             (DataType::Char8, Some(Box::new(-1i8)), vec![0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0xff], mem::size_of::<i8>() as u16),
             (DataType::UChar8, Some(Box::new(1u8)), vec![0x00, 0x00, 0x00, 0x00, 0x03, 0x01, 0x00, 0x01], mem::size_of::<u8>() as u16),
             (DataType::Int16, Some(Box::new(-1i16)), vec![0x00, 0x00, 0x00, 0x00, 0x04, 0x02, 0x00, 0xff, 0xff], mem::size_of::<i16>() as u16),
