@@ -140,38 +140,6 @@ impl GetItem for Option<Box<dyn Any>> {
     }
 }
 
-// implementation for frame object, accesses data object functions
-impl GetItem for Frame {
-
-    fn get_data<T: 'static + Sized>(&self) -> Result<&T> {
-        Ok(self.items.get_data()?)
-    }
-
-    fn get_item(&self, tag: u32) -> Result<&Item> {
-        Ok(self.items.get_item(tag)?)
-    }
-
-    fn get_item_data<T: 'static + Sized>(&self, tag: u32) -> Result<&T> {
-        Ok(self.items.get_item_data(tag)?)
-    }
-}
-
-// implementation for item object, accesses data object functions
-impl GetItem for Item {
-
-    fn get_data<T: 'static + Sized>(&self) -> Result<&T> {
-        Ok(self.data.get_data()?)
-    }
-
-    fn get_item(&self, tag: u32) -> Result<&Item> {
-        Ok(self.data.get_item(tag)?)
-    }
-
-    fn get_item_data<T: 'static + Sized>(&self, tag: u32) -> Result<&T> {
-        Ok(self.data.get_item_data(tag)?)
-    }
-}
-
 #[derive(Debug)] // Allow the use of "{:?}" format specifier
 pub enum Errors {
     Parse(String),

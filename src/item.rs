@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use std::io::{Read, Write};
 use std::mem;
 
-use crate::{ErrorCode};
+use crate::{ErrorCode, GetItem};
 use crate::read_ext::ReadExt;
 use crate::tags::TagGroup;
 
@@ -150,6 +150,22 @@ impl Item {
             tag: tag & TAG_MASK,
             data: data
         })
+    }
+}
+
+// implementation for item object, accesses data object functions
+impl GetItem for Item {
+
+    fn get_data<T: 'static + Sized>(&self) -> Result<&T> {
+        Ok(self.data.get_data()?)
+    }
+
+    fn get_item(&self, tag: u32) -> Result<&Item> {
+        Ok(self.data.get_item(tag)?)
+    }
+
+    fn get_item_data<T: 'static + Sized>(&self, tag: u32) -> Result<&T> {
+        Ok(self.data.get_item_data(tag)?)
     }
 }
 

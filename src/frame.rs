@@ -7,7 +7,7 @@ use std::fmt::Debug;
 use std::io::Cursor;
 use std::io::Write;
 
-use crate::{Item, Errors};
+use crate::{Item, Errors, GetItem};
 use crate::item::{DataType, get_data_length, read_timestamp, write_timestamp, write_data};
 use crate::read_ext::ReadExt;
 
@@ -144,13 +144,28 @@ impl Frame {
     }
 }
 
-
 impl Debug for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let items = self.items.as_ref().unwrap().downcast_ref::<Vec<Item>>().unwrap();
+        let items = self.get_data::<Vec<Item>>().unwrap();
         f.debug_struct("Frame")
             .field("time_stamp", &self.time_stamp)
             .field("items", items)
             .finish()
+    }
+}
+
+// implementation for frame object, accesses data object functions
+impl GetItem for Frame {
+
+    fn get_data<T: 'static + Sized>(&self) -> Result<&T> {
+        Ok(self.items.get_data()?)
+    }
+
+    fn get_item(&self, tag: u32) -> Result<&Item> {
+        Ok(self.items.get_item(tag)?)
+    }
+
+    fn get_item_data<T: 'static + Sized>(&self, tag: u32) -> Result<&T> {
+        Ok(self.items.get_item_data(tag)?)
     }
 }
