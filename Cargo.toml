@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/mr-sven/rust-rscp"
 description = "Rust implementation of E3DC RSCP"
-categories = ["network-programming", "no-std"]
+categories = ["network-programming"]
 keywords = ["e3dc", "energy_storage"]
 
 [lib]
