@@ -2,6 +2,7 @@
 
 [![License:MIT](https://badgen.net/github/license/mr-sven/rscp)](https://opensource.org/licenses/MIT)
 [![Coverage](https://badgen.net/badge/coverage/58.49%25/yellow)](https://github.com/mr-sven/rscp)
+[![Latest Version](https://badgen.net/crates/v/rscp)](https://crates.io/crates/rscp)
 
 This lib is a Rust based E3/DC RSCP connetor.
 
