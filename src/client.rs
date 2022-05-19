@@ -1,6 +1,6 @@
 
 use anyhow::{Result, bail};
-use log::{info, warn, debug};
+use log::{info, debug};
 use std::io::{Write, Read};
 use std::net::{TcpStream, ToSocketAddrs, Shutdown};
 use std::sync::{Mutex, Arc};
@@ -84,7 +84,7 @@ impl Client {
             match self.connection.as_mut().unwrap().as_ref().lock().unwrap().read_exact(&mut buffer) {
                 Ok(_) => { data.extend_from_slice(&buffer); },
                 Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => { break; },
-                Err(e) => { break; } //return Err(anyhow!("error receiving data: {}", e))
+                Err(_) => { break; } //return Err(anyhow!("error receiving data: {}", e))
             }
         };
         Ok(data)

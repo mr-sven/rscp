@@ -389,11 +389,12 @@ macro_rules! test_data_cases {
 #[test]
 fn test_item_from_bytes() {
     let test_cases = test_data_cases!();
-    for (data_type, data, data_buffer, _) in test_cases {
+    for (data_type, _, data_buffer, _) in test_cases {
         let mut buffer_size = data_buffer.len() as u16;
         let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(data_buffer);
         let item = Item::from_bytes(&mut buffer, &mut buffer_size).unwrap();
         assert_eq!(item.tag, 0x00, "Test tag {:?}", data_type);
+        // TODO: test data against source
     }
 }
 
