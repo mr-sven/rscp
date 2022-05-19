@@ -337,7 +337,13 @@ fn get_data_type (data: Option<&Box<dyn Any>>) -> Result<DataType> {
     }
 }
 
-
+/// Write data to write cursor
+/// 
+/// # Arguments
+/// 
+/// * `writer` - Write cursor
+/// * `data_type` - type of data
+/// * `data` - the data to write
 pub fn write_data<W: Write>(writer: &mut W, data_type: &DataType, data: Option<&Box<dyn Any>>) -> Result<()> {
 
     if let Some(p) = data {
@@ -406,12 +412,23 @@ pub fn write_data<W: Write>(writer: &mut W, data_type: &DataType, data: Option<&
     Ok(())
 }
 
+/// Writes datetime to writer
+/// 
+/// # Arguments
+/// 
+/// `writer` - write cursor
+/// `date_time` - the time to write
 pub fn write_timestamp<W: Write>(writer: &mut W, date_time: &DateTime<Utc>) -> Result<()> {
     writer.write(&date_time.timestamp().to_le_bytes())?;
     writer.write(&date_time.timestamp_subsec_nanos().to_le_bytes())?;
     Ok(())
 }
 
+/// Reads datetime from reader
+/// 
+/// # Arguments
+/// 
+/// `reader` - the reader
 pub fn read_timestamp<R: Read>(reader: &mut R) -> Result<DateTime<Utc>> {
     let seconds = reader.read_le::<i64>()?;
     let nanos = reader.read_le::<u32>()?;
