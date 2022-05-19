@@ -64,12 +64,31 @@ data_type_ext! {
     }
 }
 
+/// RSCP data item
 pub struct Item {
+    /// Tag identifier
     pub tag: u32,
+
+    /// data content
     pub data: Option<Box<dyn Any>>
 }
 
 impl Item {
+    /// Returns a data item using tag and any data element
+    /// 
+    /// # Arguments
+    /// 
+    /// * `tag` - u32 representation of RSCP Protocol Tag
+    /// * `data` - Any data content
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use rscp::{tags, Item};
+    /// let item = Item::new(tags::RSCP::AUTHENTICATION_USER.into(), "username".to_string());
+    /// // item with none content
+    /// let item_none = Item { tag: tags::INFO::SERIAL_NUMBER.into(), data: None };
+    /// ```
     pub fn new<T: Any>(tag: u32, data: T) -> Self {
         Self {
             tag: tag,
@@ -77,7 +96,20 @@ impl Item {
         }
     }
 
-    fn to_bytes<W: Write>(&self, writer: &mut W) -> Result<()> {
+    /// Writes data to write cursor
+    /// 
+    /// # Arguments
+    /// 
+    /// * `writer` - write cursor
+    /// 
+    /// # Examples
+    /// 
+    /// ```ignore
+    /// let mut buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
+    /// let item = Item::new(tags::RSCP::AUTHENTICATION_USER.into(), "username".to_string());
+    /// item.write_bytes(&mut buffer)?;
+    /// ```
+    fn write_bytes<W: Write>(&self, writer: &mut W) -> Result<()> {
 
         // write tag to buffer
         writer.write(&self.tag.to_le_bytes())?;
@@ -96,7 +128,23 @@ impl Item {
         Ok(())
     }
 
-    pub fn from_bytes<R: Read>(reader: &mut R, length: &mut u16) -> Result<Self> {
+    /// Returns a data item from read cursor
+    /// 
+    /// # Arguments
+    /// 
+    /// * `reader` - read cursor
+    /// * `length` - pointer to current size of remaining data, will be decremented by number of bytes processed
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::io::Cursor;
+    /// use rscp::Item;
+    /// let mut buffer: Cursor<Vec<u8>> = Cursor::new(vec![0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    /// let mut len: u16 = 7;
+    /// let item = Item::read_bytes(&mut buffer, &mut len);
+    /// ```
+    pub fn read_bytes<R: Read>(reader: &mut R, length: &mut u16) -> Result<Self> {
         let tag = reader.read_le::<u32>()?;
         let data_type = DataType::from(reader.read_le::<u8>()?);
         let data_len = reader.read_le::<u16>()?;
@@ -124,7 +172,7 @@ impl Item {
                 let mut items: Vec<Item> = Vec::new();
                 let mut container_size = data_len;
                 while container_size > 0 {
-                    items.push(Item::from_bytes(reader, &mut container_size)?);
+                    items.push(Item::read_bytes(reader, &mut container_size)?);
                 }
                 Some(Box::new(items))
             },
@@ -146,7 +194,7 @@ impl Item {
     }
 }
 
-// implementation for item object, accesses data object functions
+/// implementation for item object, accesses data object functions
 impl GetItem for Item {
 
     fn get_data<T: 'static + Sized>(&self) -> Result<&T> {
@@ -165,40 +213,55 @@ impl GetItem for Item {
 impl std::fmt::Debug for Item {    
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         let tag_group = TagGroup::from((&self.tag >> 24) as u8);
-        let data = self.data.as_ref().unwrap();
-        let data_debug = get_debug_data(&data);
+        let data_debug = get_debug_data(self.data.as_ref());
         
         fmt.debug_struct("Item")
-            .field("tag", &tag_group.tags(&self.tag & 0x7fffff))
+            .field("tag", &tag_group.tags(&self.tag & TAG_MASK))
             .field("data", &data_debug)
             .finish()
     }
 }
 
-fn get_debug_data(data: &Box<dyn Any>) -> Box<dyn Debug + '_> {
-    let current_id = (&**data).type_id();
-    match current_id {
-        x if x == TypeId::of::<bool>() => Box::new(data.downcast_ref::<bool>().unwrap()),
-        x if x == TypeId::of::<i8>() => Box::new(data.downcast_ref::<i8>().unwrap()),
-        x if x == TypeId::of::<u8>() => Box::new(data.downcast_ref::<u8>().unwrap()),
-        x if x == TypeId::of::<i16>() => Box::new(data.downcast_ref::<i16>().unwrap()),
-        x if x == TypeId::of::<u16>() => Box::new(data.downcast_ref::<u16>().unwrap()),
-        x if x == TypeId::of::<i32>() => Box::new(data.downcast_ref::<i32>().unwrap()),
-        x if x == TypeId::of::<u32>() => Box::new(data.downcast_ref::<u32>().unwrap()),
-        x if x == TypeId::of::<i64>() => Box::new(data.downcast_ref::<i64>().unwrap()),
-        x if x == TypeId::of::<u64>() => Box::new(data.downcast_ref::<u64>().unwrap()),
-        x if x == TypeId::of::<f32>() => Box::new(data.downcast_ref::<f32>().unwrap()),
-        x if x == TypeId::of::<f64>() => Box::new(data.downcast_ref::<f64>().unwrap()),
-        x if x == TypeId::of::<Vec<bool>>() => Box::new(data.downcast_ref::<Vec<bool>>().unwrap()),
-        x if x == TypeId::of::<String>() => Box::new(data.downcast_ref::<String>().unwrap()),
-        x if x == TypeId::of::<Vec<Item>>() => Box::new(data.downcast_ref::<Vec<Item>>().unwrap()),
-        x if x == TypeId::of::<DateTime<Utc>>() => Box::new(data.downcast_ref::<DateTime<Utc>>().unwrap()),
-        x if x == TypeId::of::<Vec<u8>>() => Box::new(data.downcast_ref::<Vec<u8>>().unwrap()),
-        x if x == TypeId::of::<ErrorCode>() => Box::new(data.downcast_ref::<ErrorCode>().unwrap()),
-        _ => Box::new("None")
+/// helper function for std::fmt::Debug of Item
+/// 
+/// # Arguments
+/// 
+/// * `data` - Any data type to convert
+fn get_debug_data(data: Option<&Box<dyn Any>>) -> Box<dyn Debug + '_> {
+    match data {
+        Some(p) => {
+            let current_id = (&**p).type_id();
+            match current_id {
+                x if x == TypeId::of::<bool>() => Box::new(p.downcast_ref::<bool>().unwrap()),
+                x if x == TypeId::of::<i8>() => Box::new(p.downcast_ref::<i8>().unwrap()),
+                x if x == TypeId::of::<u8>() => Box::new(p.downcast_ref::<u8>().unwrap()),
+                x if x == TypeId::of::<i16>() => Box::new(p.downcast_ref::<i16>().unwrap()),
+                x if x == TypeId::of::<u16>() => Box::new(p.downcast_ref::<u16>().unwrap()),
+                x if x == TypeId::of::<i32>() => Box::new(p.downcast_ref::<i32>().unwrap()),
+                x if x == TypeId::of::<u32>() => Box::new(p.downcast_ref::<u32>().unwrap()),
+                x if x == TypeId::of::<i64>() => Box::new(p.downcast_ref::<i64>().unwrap()),
+                x if x == TypeId::of::<u64>() => Box::new(p.downcast_ref::<u64>().unwrap()),
+                x if x == TypeId::of::<f32>() => Box::new(p.downcast_ref::<f32>().unwrap()),
+                x if x == TypeId::of::<f64>() => Box::new(p.downcast_ref::<f64>().unwrap()),
+                x if x == TypeId::of::<Vec<bool>>() => Box::new(p.downcast_ref::<Vec<bool>>().unwrap()),
+                x if x == TypeId::of::<String>() => Box::new(p.downcast_ref::<String>().unwrap()),
+                x if x == TypeId::of::<Vec<Item>>() => Box::new(p.downcast_ref::<Vec<Item>>().unwrap()),
+                x if x == TypeId::of::<DateTime<Utc>>() => Box::new(p.downcast_ref::<DateTime<Utc>>().unwrap()),
+                x if x == TypeId::of::<Vec<u8>>() => Box::new(p.downcast_ref::<Vec<u8>>().unwrap()),
+                x if x == TypeId::of::<ErrorCode>() => Box::new(p.downcast_ref::<ErrorCode>().unwrap()),
+                _ => Box::new("None")
+            }
+        },
+        None => Box::new("None"),
     }
 }
 
+/// retuns the lenght of the data by DataType and size at string, container and byte array
+/// 
+/// # Arguments
+/// 
+/// * `data_type` - type of data
+/// * `data` - Any data, required for string, container and byte array
 pub fn get_data_length(data_type: &DataType, data: Option<&Box<dyn Any>>) -> Result<u16> {
     match data_type {
         DataType::None => Ok(mem::size_of::<()>() as u16),
@@ -222,6 +285,11 @@ pub fn get_data_length(data_type: &DataType, data: Option<&Box<dyn Any>>) -> Res
     }
 }
 
+/// retuns the size of a item vector (Container)
+/// 
+/// # Arguments
+/// 
+/// * `items` - Vector of items
 fn get_container_size(items: &[Item]) -> Result<u16> {
     let mut size: u16 = 0;
     for item in items {
@@ -232,6 +300,11 @@ fn get_container_size(items: &[Item]) -> Result<u16> {
     Ok(size)
 }
 
+/// retuns data type of Any
+/// 
+/// # Arguments
+/// 
+/// * `data` - Any Option
 fn get_data_type (data: Option<&Box<dyn Any>>) -> Result<DataType> {
     match data {
         Some(p) => {
@@ -263,6 +336,7 @@ fn get_data_type (data: Option<&Box<dyn Any>>) -> Result<DataType> {
         None => Ok(DataType::None),
     }
 }
+
 
 pub fn write_data<W: Write>(writer: &mut W, data_type: &DataType, data: Option<&Box<dyn Any>>) -> Result<()> {
 
@@ -314,7 +388,7 @@ pub fn write_data<W: Write>(writer: &mut W, data_type: &DataType, data: Option<&
             DataType::Container => {
                 let items = data.unwrap().downcast_ref::<Vec<Item>>().unwrap();
                 for item in items {
-                    item.to_bytes(writer)?;
+                    item.write_bytes(writer)?;
                 }
             },
             DataType::Timestamp =>  {
@@ -392,7 +466,7 @@ fn test_item_from_bytes() {
     for (data_type, _, data_buffer, _) in test_cases {
         let mut buffer_size = data_buffer.len() as u16;
         let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(data_buffer);
-        let item = Item::from_bytes(&mut buffer, &mut buffer_size).unwrap();
+        let item = Item::read_bytes(&mut buffer, &mut buffer_size).unwrap();
         assert_eq!(item.tag, 0x00, "Test tag {:?}", data_type);
         // TODO: test data against source
     }
@@ -404,7 +478,7 @@ fn test_item_to_bytes() {
     for (data_type, data, result, _) in test_cases {
         let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(Vec::new());
         let item = Item { tag: 0x00, data: data };
-        item.to_bytes(&mut buffer).unwrap();
+        item.write_bytes(&mut buffer).unwrap();
         assert_eq!(buffer.get_ref().to_vec(), result, "Test {:?}", data_type);
     };
 }

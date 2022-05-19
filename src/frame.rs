@@ -133,7 +133,7 @@ impl Frame {
         let mut items: Vec<Item> = Vec::new();
         let mut container_size = length;
         while container_size > 0 {
-            items.push(Item::from_bytes(&mut buffer, &mut container_size)?);
+            items.push(Item::read_bytes(&mut buffer, &mut container_size)?);
         }
 
         Ok(Self {

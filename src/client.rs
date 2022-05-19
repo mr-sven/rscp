@@ -49,10 +49,8 @@ impl Client {
         ]));
 
         info!("Authenticate");
-        info!("{:?}", frame);
         match self.send_receive_frame(&frame) {
             Ok(result_frame) => { 
-                info!("{:?}", result_frame);
                 let user_level = result_frame.get_item_data::<u8>(tags::RSCP::AUTHENTICATION.into()).unwrap();
                 let user_level_type = UserLevel::from(user_level.clone());
                 info!("Authenticated as {:?}", user_level_type);
@@ -91,9 +89,9 @@ impl Client {
     }
 
     pub fn send_receive_frame(&mut self, frame: &Frame) -> Result<Frame> {
-
+        debug!("<< {:?}", frame);
         let data = frame.to_bytes()?;
-        debug!("<< Frame: {:02x?}", data);
+        // debug!("<< Frame: {:02x?}", data);
         let enc_data = self.enc_processor.encrypt(data)?;
 
         self.write_to_stream(&enc_data)?;
@@ -103,8 +101,11 @@ impl Client {
         }
 
         let return_data = self.enc_processor.decrypt(return_enc_data)?;
-        debug!(">> Frame: {:02x?}", return_data);
+        // debug!(">> Frame: {:02x?}", return_data);
 
-        Ok(Frame::from_bytes(return_data)?)
+        let result_frame = Frame::from_bytes(return_data)?;
+        debug!(">> {:?}", result_frame);
+
+        Ok(result_frame)
     }
 }
