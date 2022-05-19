@@ -49,7 +49,7 @@ macro_rules! user_level_ext {
         $(#[$($attrs:tt)*])*
         pub enum $name:ident { $($vn:ident = $v:tt),+ }
     ) => {
-        /// Error code result
+        /// Level of user
         $(#[$($attrs)*])*
         pub enum $name {
             $($vn = $v),+
@@ -175,11 +175,16 @@ impl GetItem for Option<Box<dyn Any>> {
     }
 }
 
+/// Errors pubished by the package.
 #[derive(Debug)] // Allow the use of "{:?}" format specifier
 pub enum Errors {
+    /// Error from Frame parser.
     Parse(String),
+    /// If nothing is received.
     ReceiveNothing,
+    /// Authentication failed.
     AuthFailed,
+    /// If not connected.
     NotConnected
 }
 
