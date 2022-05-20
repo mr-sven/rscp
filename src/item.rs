@@ -326,11 +326,9 @@ fn get_data_type (data: Option<&Box<dyn Any>>) -> Result<DataType> {
                 x if x == TypeId::of::<f32>() => Ok(DataType::Float32),
                 x if x == TypeId::of::<f64>() => Ok(DataType::Double64),
                 x if x == TypeId::of::<Vec<bool>>() => Ok(DataType::Bitfield),
-                x if x == TypeId::of::<str>() => Err(anyhow!("Invalid data type use String instead of str")),
                 x if x == TypeId::of::<String>() => Ok(DataType::String),
                 x if x == TypeId::of::<Vec<Item>>() => Ok(DataType::Container),
                 x if x == TypeId::of::<DateTime<Utc>>() => Ok(DataType::Timestamp),
-                x if x == TypeId::of::<[u8]>() => Err(anyhow!("Invalid data type use Vec<u8> instead of [u8]")),
                 x if x == TypeId::of::<Vec<u8>>() => Ok(DataType::ByteArray),
                 x if x == TypeId::of::<ErrorCode>() => Ok(DataType::Error),
                 _ => Err(anyhow!("Invalid data type"))
@@ -481,7 +479,18 @@ macro_rules! test_data_cases {
 }
 
 #[test]
-fn test_item_from_bytes() {
+fn test_item_write_bytes() {
+    let test_cases = test_data_cases!();
+    for (data_type, data, result, _) in test_cases {
+        let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(Vec::new());
+        let item = Item { tag: 0x00, data: data };
+        item.write_bytes(&mut buffer).unwrap();
+        assert_eq!(buffer.get_ref().to_vec(), result, "Test {:?}", data_type);
+    };
+}
+
+#[test]
+fn test_item_read_bytes() {
     let test_cases = test_data_cases!();
     for (data_type, _, data_buffer, _) in test_cases {
         let mut buffer_size = data_buffer.len() as u16;
@@ -493,14 +502,20 @@ fn test_item_from_bytes() {
 }
 
 #[test]
-fn test_item_to_bytes() {
-    let test_cases = test_data_cases!();
-    for (data_type, data, result, _) in test_cases {
-        let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(Vec::new());
-        let item = Item { tag: 0x00, data: data };
-        item.write_bytes(&mut buffer).unwrap();
-        assert_eq!(buffer.get_ref().to_vec(), result, "Test {:?}", data_type);
-    };
+fn test_get_item_impl() {
+    let item_container = Item::new(crate::tags::RSCP::AUTHENTICATION.into(), vec![
+        Item::new(crate::tags::RSCP::AUTHENTICATION_USER.into(), "username".to_string()),
+        Item::new(crate::tags::RSCP::AUTHENTICATION_PASSWORD.into(), "password".to_string()),
+    ]);
+    let sub_item = item_container.get_item(crate::tags::RSCP::AUTHENTICATION_USER.into()).unwrap();
+    assert_eq!(sub_item.get_data::<String>().unwrap(), "username");
+    assert_eq!(item_container.get_item_data::<String>(crate::tags::RSCP::AUTHENTICATION_USER.into()).unwrap(), "username");
+}
+
+#[test]
+fn test_display_impl() {
+    let item = Item::new(crate::tags::RSCP::AUTHENTICATION_USER.into(), "username".to_string());
+    assert_eq!(format!("{:?}", item), "Item { tag: \"RSCP_AUTHENTICATION_USER\", data: \"username\" }");
 }
 
 #[test]
@@ -528,6 +543,10 @@ fn test_get_data_type() {
         let data_type_from_data = get_data_type(data.as_ref()).unwrap();
         assert_eq!(data_type, data_type_from_data, "Test {:?}", data_type);
     }
+
+    let fail_vec_box: Box<dyn Any> = Box::new([1u8, 2, 3, 4, 5]);
+    let fail_vec = get_data_type(Some(&fail_vec_box));
+    assert_eq!(fail_vec.unwrap_err().downcast::<&str>().unwrap(), "Invalid data type");
 }
 
 #[test]
