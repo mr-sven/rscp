@@ -3,7 +3,7 @@
 [![Crate](https://img.shields.io/crates/v/rscp.svg)](https://crates.io/crates/rscp)
 [![Docs](https://docs.rs/rscp/badge.svg)](https://docs.rs/rscp)
 [![License](https://img.shields.io/crates/l/rscp.svg?maxAge=2592000)](https://github.com/mr-sven/rscp/blob/main/LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-75.86%25-yellowgreen)](https://github.com/mr-sven/rscp)
+[![Coverage](https://img.shields.io/badge/coverage-89.48%25-green)](https://github.com/mr-sven/rscp)
 
 This lib is a Rust based E3/DC RSCP connector.
 
