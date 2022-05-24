@@ -3,7 +3,7 @@
 [![Crate](https://img.shields.io/crates/v/rscp.svg)](https://crates.io/crates/rscp)
 [![Docs](https://docs.rs/rscp/badge.svg)](https://docs.rs/rscp)
 [![License](https://img.shields.io/crates/l/rscp.svg?maxAge=2592000)](https://github.com/mr-sven/rscp/blob/main/LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-69.77%25-yellow)](https://github.com/mr-sven/rscp)
+[![Coverage](https://img.shields.io/badge/coverage-71.63%25-yellowgreen)](https://github.com/mr-sven/rscp)
 
 This lib is a Rust based E3/DC RSCP connector.
 
@@ -34,7 +34,7 @@ info_frame.push_item(rscp::Item { tag: rscp::tags::INFO::SW_RELEASE.into(), data
 
 match c.send_receive_frame(&info_frame) {
     Ok(result_frame) => {
-        println!("{}", result_frame.get_item_data::<String>(rscp::tags::INFO::SERIAL_NUMBER.into()).unwrap());            
+        println!("{}", result_frame.get_item_data::<String>(rscp::tags::INFO::SERIAL_NUMBER.into()).unwrap());
     },
     Err(err) => {
         warn!("Unable send: {:?}", err);
