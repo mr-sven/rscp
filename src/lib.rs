@@ -108,7 +108,7 @@ user_level_ext! {
 /// Item and data getter for Frame and Item
 pub trait GetItem {
     /// returns typed data from data property
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rscp::{tags, Item, GetItem};
@@ -118,11 +118,11 @@ pub trait GetItem {
     fn get_data<T: 'static + Sized>(&self) -> Result<&T>;
 
     /// returns item by tag from data / item list
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `tag` - Tag Identifier
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rscp::{tags, Item, GetItem};
@@ -133,13 +133,13 @@ pub trait GetItem {
     /// let item = item_container.get_item(tags::RSCP::AUTHENTICATION_USER.into()).unwrap();
     /// ```
     fn get_item(&self, tag: u32) -> Result<&Item>;
-    
+
     /// returns typed item data by tag from data / item list
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `tag` - Tag Identifier
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use rscp::{tags, Item, GetItem};
@@ -210,6 +210,14 @@ fn test_error_code() {
     assert_eq!(ErrorCode::from(0x01u32), ErrorCode::NotHandled, "Test From<u32>");
     assert_eq!(Into::<u32>::into(ErrorCode::NotHandled), 0x01u32, "Test Into<u32>");
     assert_eq!(ErrorCode::from(0xffffu32), ErrorCode::Unknown, "Test From Unknown<u32>");
+
+    let error_code = ErrorCode::from(0x01u32);
+
+    let error_code_copy = error_code;
+    assert_eq!(error_code_copy, ErrorCode::NotHandled, "Test copy");
+
+    let error_code_clone = error_code.clone();
+    assert_eq!(error_code_clone, ErrorCode::NotHandled, "Test clone");
 }
 
 #[test]
@@ -217,4 +225,20 @@ fn test_user_level() {
     assert_eq!(UserLevel::from(10), UserLevel::User, "Test From<u8>");
     assert_eq!(Into::<u8>::into(UserLevel::User), 10, "Test Into<u8>");
     assert_eq!(UserLevel::from(0xfe), UserLevel::Unknown, "Test From Unknown<u8>");
+
+    let user_level = UserLevel::from(10);
+
+    let user_level_copy = user_level;
+    assert_eq!(user_level_copy, UserLevel::User, "Test copy");
+
+    let user_level_clone = user_level.clone();
+    assert_eq!(user_level_clone, UserLevel::User, "Test clone");
+}
+
+#[test]
+fn test_error_display_impl() {
+    assert_eq!(format!("{}", Errors::Parse("test".to_string())), "Frame parse error: test");
+    assert_eq!(format!("{}", Errors::ReceiveNothing), "Receive nothing");
+    assert_eq!(format!("{}", Errors::AuthFailed), "Authentication failed");
+    assert_eq!(format!("{}", Errors::NotConnected), "Not Connected");
 }

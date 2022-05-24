@@ -456,7 +456,8 @@ struct TestData {
     data_type: DataType,
     data: Option<Box<dyn Any>>,
     byte_data: Vec<u8>,
-    data_size: u16
+    data_size: u16,
+    item_str: &'static str,
 }
 
 
@@ -468,91 +469,106 @@ macro_rules! test_data_cases {
                 data_type: DataType::None,
                 data: None,
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-                data_size: mem::size_of::<()>() as u16
+                data_size: mem::size_of::<()>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: \"None\" }"
             },
             TestData {
                 data_type: DataType::Bool,
                 data: Some(Box::new(true)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01],
-                data_size: mem::size_of::<bool>() as u16
+                data_size: mem::size_of::<bool>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: true }"
             },
             TestData {
                 data_type: DataType::Bool,
                 data: Some(Box::new(false)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00],
-                data_size: mem::size_of::<bool>() as u16
+                data_size: mem::size_of::<bool>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: false }"
             },
             TestData {
                 data_type: DataType::Char8,
                 data: Some(Box::new(-1i8)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0xff],
-                data_size: mem::size_of::<i8>() as u16
+                data_size: mem::size_of::<i8>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: -1 }"
             },
             TestData {
                 data_type: DataType::UChar8,
                 data: Some(Box::new(1u8)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x03, 0x01, 0x00, 0x01],
-                data_size: mem::size_of::<u8>() as u16
+                data_size: mem::size_of::<u8>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: 1 }"
             },
             TestData {
                 data_type: DataType::Int16,
                 data: Some(Box::new(-1i16)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x04, 0x02, 0x00, 0xff, 0xff],
-                data_size: mem::size_of::<i16>() as u16
+                data_size: mem::size_of::<i16>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: -1 }"
             },
             TestData {
                 data_type: DataType::UInt16,
                 data: Some(Box::new(1u16)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x05, 0x02, 0x00, 0x01, 0x00],
-                data_size: mem::size_of::<u16>() as u16
+                data_size: mem::size_of::<u16>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: 1 }"
             },
             TestData {
                 data_type: DataType::Int32,
                 data: Some(Box::new(-1i32)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x06, 0x04, 0x00, 0xff, 0xff, 0xff, 0xff],
-                data_size: mem::size_of::<i32>() as u16
+                data_size: mem::size_of::<i32>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: -1 }"
             },
             TestData {
                 data_type: DataType::UInt32,
                 data: Some(Box::new(1u32)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x07, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00],
-                data_size: mem::size_of::<u32>() as u16
+                data_size: mem::size_of::<u32>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: 1 }"
             },
             TestData {
                 data_type: DataType::Int64,
                 data: Some(Box::new(-1i64)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
-                data_size: mem::size_of::<i64>() as u16
+                data_size: mem::size_of::<i64>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: -1 }"
             },
             TestData {
                 data_type: DataType::UInt64,
                 data: Some(Box::new(1u64)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x09, 0x08, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-                data_size: mem::size_of::<u64>() as u16
+                data_size: mem::size_of::<u64>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: 1 }"
             },
             TestData {
                 data_type: DataType::Float32,
                 data: Some(Box::new(1.0f32)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x0a, 0x04, 0x00, 0x00, 0x00, 0x80, 0x3f],
-                data_size: mem::size_of::<f32>() as u16
+                data_size: mem::size_of::<f32>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: 1.0 }"
             },
             TestData {
                 data_type: DataType::Double64,
                 data: Some(Box::new(1.0f64)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x0b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f],
-                data_size: mem::size_of::<f64>() as u16
+                data_size: mem::size_of::<f64>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: 1.0 }"
             },
             TestData {
                 data_type: DataType::Bitfield,
                 data: Some(Box::new(vec![true, false, true, false, true, false, true, false, false, true, false, true, false, true, false, true])),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x0c, 0x02, 0x00, 0x55, 0xaa],
-                data_size: 2
+                data_size: 2,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: [true, false, true, false, true, false, true, false, false, true, false, true, false, true, false, true] }"
             },
             TestData {
                 data_type: DataType::String,
                 data: Some(Box::new("Test".to_string())),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x0d, 0x04, 0x00, 0x54, 0x65, 0x73, 0x74],
-                data_size: 4
+                data_size: 4,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: \"Test\" }"
             },
             TestData {
                 data_type: DataType::Container,
@@ -561,25 +577,29 @@ macro_rules! test_data_cases {
                     Item::new(crate::tags::RSCP::AUTHENTICATION_PASSWORD.into(), "pwd".to_string()),
                 ])),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x0e, 0x15, 0x00, 2, 0, 0, 0, 13, 4, 0, 117, 115, 101, 114, 3, 0, 0, 0, 13, 3, 0, 112, 119, 100],
-                data_size: 21
+                data_size: 21,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: [Item { tag: \"RSCP_AUTHENTICATION_USER\", data: \"user\" }, Item { tag: \"RSCP_AUTHENTICATION_PASSWORD\", data: \"pwd\" }] }"
             },
             TestData {
                 data_type: DataType::Timestamp,
                 data: Some(Box::new(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(12345678, 123456), Utc))),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x0f, 0x0c, 0x00, 78, 97, 188, 0, 0, 0, 0, 0, 64, 226, 1, 0],
-                data_size: (mem::size_of::<i64>() + mem::size_of::<i32>()) as u16
+                data_size: (mem::size_of::<i64>() + mem::size_of::<i32>()) as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: 1970-05-23T21:21:18.000123456Z }"
             },
             TestData {
                 data_type: DataType::ByteArray,
                 data: Some(Box::new(vec![0x0fu8; 4])),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x10, 0x04, 0x00, 0x0f, 0x0f, 0x0f, 0x0f],
-                data_size: 4
+                data_size: 4,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: [15, 15, 15, 15] }"
             },
             TestData {
                 data_type: DataType::Error,
                 data: Some(Box::new(ErrorCode::NotHandled)),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0xff, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00],
-                data_size: mem::size_of::<u32>() as u16
+                data_size: mem::size_of::<u32>() as u16,
+                item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: NotHandled }"
             },
         ];
         test_cases
@@ -615,15 +635,25 @@ fn test_get_item_impl() {
         Item::new(crate::tags::RSCP::AUTHENTICATION_USER.into(), "username".to_string()),
         Item::new(crate::tags::RSCP::AUTHENTICATION_PASSWORD.into(), "password".to_string()),
     ]);
+
     let sub_item = item_container.get_item(crate::tags::RSCP::AUTHENTICATION_USER.into()).unwrap();
     assert_eq!(sub_item.get_data::<String>().unwrap(), "username");
     assert_eq!(item_container.get_item_data::<String>(crate::tags::RSCP::AUTHENTICATION_USER.into()).unwrap(), "username");
+
+    let err_item = item_container.get_item(crate::tags::RSCP::GENERAL_ERROR.into());
+    assert_eq!(err_item.unwrap_err().downcast::<String>().unwrap(), "Tag not found 8388607");
 }
 
 #[test]
 fn test_display_impl() {
-    let item = Item::new(crate::tags::RSCP::AUTHENTICATION_USER.into(), "username".to_string());
-    assert_eq!(format!("{:?}", item), "Item { tag: \"RSCP_AUTHENTICATION_USER\", data: \"username\" }");
+    let test_cases = test_data_cases!();
+    for test_case in test_cases {
+        let item = Item { tag: 0x00, data: test_case.data };
+        assert_eq!(format!("{:?}", item), test_case.item_str);
+    }
+
+    let item = Item { tag: 0x00, data: Some(Box::new([1u8, 2, 3, 4, 5])) };
+    assert_eq!(format!("{:?}", item), "Item { tag: \"RSCP_GENERAL_ERROR\", data: \"None\" }");
 }
 
 #[test]
@@ -665,6 +695,11 @@ fn test_write_data() {
         write_data(&mut buffer, &test_case.data_type, test_case.data.as_ref()).unwrap();
         assert_eq!(buffer.get_ref().to_vec(), test_case.byte_data[ITEM_HEADER_SIZE as usize..], "Test {:?}", test_case.data_type);
     }
+
+    let none_vec_box: Box<dyn Any> = Box::new(0);
+    let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(Vec::new());
+    write_data(&mut buffer, &DataType::None, Some(&none_vec_box)).unwrap();
+    assert_eq!(buffer.get_ref().to_vec(), Vec::new(), "Test None {:?}", DataType::None);
 }
 
 #[test]
