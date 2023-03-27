@@ -6,9 +6,11 @@ use std::fmt::Debug;
 use std::io::Cursor;
 use std::io::Write;
 
+use crate::errors::Errors;
+use crate::getitem::GetItem;
 use crate::item::{get_data_length, read_timestamp, write_data, write_timestamp, DataType};
 use crate::read_ext::ReadExt;
-use crate::{Errors, GetItem, Item};
+use crate::Item;
 
 /// the protocol magic id for rscp frame
 const MAGIC_ID: u16 = 0xE3DC;
@@ -226,6 +228,18 @@ impl GetItem for Frame {
 
     fn get_item_data<T: 'static + Sized>(&self, tag: u32) -> Result<&T> {
         Ok(self.items.get_item_data(tag)?)
+    }
+}
+
+impl Clone for Frame {
+    fn clone(&self) -> Self {
+        let items_cloned = self.get_data::<Vec<Item>>().unwrap().clone();
+        let items_boxed: Box<Vec<Item>> = Box::new(items_cloned.to_vec());
+        Self {
+            with_checksum: self.with_checksum.clone(),
+            time_stamp: self.time_stamp.clone(),
+            items: Some(items_boxed),
+        }
     }
 }
 

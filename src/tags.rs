@@ -12,18 +12,18 @@ macro_rules! group_list {
         }
 
         /// Returns the name of the selected enum by id
-        /// 
+        ///
         /// # Arguments
-        /// 
+        ///
         /// * `id` - the id of the tag
-        /// 
+        ///
         /// # Examples
-        /// 
+        ///
         /// ```
         /// use rscp::tags::TagGroup;
         /// let rscp_group = TagGroup::from(0x00);
         /// println!("{}", rscp_group.tags(0x00000004)); // USER_LEVEL
-        /// ``` 
+        /// ```
         impl $name {
             pub fn tags(&self, id: u32) -> String {
                 match self {
@@ -129,7 +129,7 @@ group_list! {
         OVP = 0x22,
 
         SERVER = 0xf8,
-        GROUP = 0xfc,       
+        GROUP = 0xfc,
 
         UNKNOWN = 0xff
     }
@@ -144,7 +144,6 @@ macro_attr! {
         GENERAL_ERROR = 0x7fffff
     }
 }
-
 
 macro_attr! {
     #[group!(TagGroup::RSCP)]
@@ -1826,15 +1825,35 @@ macro_attr! {
 
 #[test]
 fn test_tag_group() {
-    assert_eq!(RSCP::AUTHENTICATION.to_string(), "RSCP_AUTHENTICATION", "Test fmt::Display");
+    assert_eq!(
+        RSCP::AUTHENTICATION.to_string(),
+        "RSCP_AUTHENTICATION",
+        "Test fmt::Display"
+    );
     assert_eq!(RSCP::from(0x01u32), RSCP::AUTHENTICATION, "Test From<u32>");
-    assert_eq!(Into::<u32>::into(RSCP::AUTHENTICATION), 0x01u32, "Test Into<u32>");
-    assert_eq!(RSCP::from(0xffffffffu32), RSCP::GENERAL_ERROR, "Test From Unknown<u32>");
+    assert_eq!(
+        Into::<u32>::into(RSCP::AUTHENTICATION),
+        0x01u32,
+        "Test Into<u32>"
+    );
+    assert_eq!(
+        RSCP::from(0xffffffffu32),
+        RSCP::GENERAL_ERROR,
+        "Test From Unknown<u32>"
+    );
 }
 
 #[test]
 fn test_tag_groups() {
     assert_eq!(TagGroup::from(0x00), TagGroup::RSCP, "Test From<u8>");
-    assert_eq!(TagGroup::RSCP.tags(0x01u32), "RSCP_AUTHENTICATION", "Test tags(u32)");
-    assert_eq!(TagGroup::from(0xfe), TagGroup::UNKNOWN, "Test From Unknown<u32>");
+    assert_eq!(
+        TagGroup::RSCP.tags(0x01u32),
+        "RSCP_AUTHENTICATION",
+        "Test tags(u32)"
+    );
+    assert_eq!(
+        TagGroup::from(0xfe),
+        TagGroup::UNKNOWN,
+        "Test From Unknown<u32>"
+    );
 }
