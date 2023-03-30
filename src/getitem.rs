@@ -24,8 +24,8 @@ pub trait GetItem {
     /// ```
     /// use rscp::{tags, Item, GetItem};
     /// let item_container = Item::new(tags::RSCP::AUTHENTICATION.into(), vec![
-    ///     Item::new(tags::RSCP::AUTHENTICATION_USER.into(), self.username.to_string()),
-    ///     Item::new(tags::RSCP::AUTHENTICATION_PASSWORD.into(), self.password.to_string()),
+    ///     Item::new(tags::RSCP::AUTHENTICATION_USER.into(), "username".to_string()),
+    ///     Item::new(tags::RSCP::AUTHENTICATION_PASSWORD.into(), "password".to_string()),
     /// ]);
     /// let item = item_container.get_item(tags::RSCP::AUTHENTICATION_USER.into()).unwrap();
     /// ```
@@ -41,8 +41,8 @@ pub trait GetItem {
     /// ```
     /// use rscp::{tags, Item, GetItem};
     /// let item_container = Item::new(tags::RSCP::AUTHENTICATION.into(), vec![
-    ///     Item::new(tags::RSCP::AUTHENTICATION_USER.into(), self.username.to_string()),
-    ///     Item::new(tags::RSCP::AUTHENTICATION_PASSWORD.into(), self.password.to_string()),
+    ///     Item::new(tags::RSCP::AUTHENTICATION_USER.into(), "username".to_string()),
+    ///     Item::new(tags::RSCP::AUTHENTICATION_PASSWORD.into(), "password".to_string()),
     /// ]);
     /// assert_eq!(item_container.get_item_data::<String>(tags::RSCP::AUTHENTICATION_USER.into()).unwrap(), "username");
     /// ```
