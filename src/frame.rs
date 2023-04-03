@@ -245,139 +245,62 @@ impl Clone for Frame {
 fn test_new() {
     let frame = Frame::new();
     assert_eq!(frame.with_checksum, true);
-    assert_eq!(
-        frame
-            .items
-            .unwrap()
-            .downcast_ref::<Vec<Item>>()
-            .unwrap()
-            .len(),
-        0
-    );
+    assert_eq!(frame.items.unwrap().downcast_ref::<Vec<Item>>().unwrap().len(), 0);
 }
 
 #[test]
 fn test_push_item() {
     let mut frame = Frame::new();
-    frame.push_item(Item {
-        tag: crate::tags::INFO::SERIAL_NUMBER.into(),
-        data: None,
-    });
-    assert_eq!(
-        frame
-            .items
-            .unwrap()
-            .downcast_ref::<Vec<Item>>()
-            .unwrap()
-            .len(),
-        1
-    );
+    frame.push_item(Item { tag: crate::tags::INFO::SERIAL_NUMBER.into(), data: None } );
+    assert_eq!(frame.items.unwrap().downcast_ref::<Vec<Item>>().unwrap().len(), 1);
 }
 
 #[test]
 fn test_to_bytes() {
     let frame = Frame {
         with_checksum: true,
-        time_stamp: DateTime::<Utc>::from_utc(
-            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
-            Utc,
-        ),
-        items: Some(Box::new(vec![Item {
-            tag: crate::tags::INFO::SERIAL_NUMBER.into(),
-            data: None,
-        }])),
+        time_stamp: DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(12345678, 123456), Utc),
+        items: Some(Box::new(vec![Item { tag: crate::tags::INFO::SERIAL_NUMBER.into(), data: None }]))
     };
-    assert_eq!(
-        frame.to_bytes().unwrap(),
-        vec![
-            0xe3, 0xdc, 0x00, 0x11, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2,
-            0x01, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0xfe, 0xfa, 0x84,
-            0x3c
-        ]
-    );
+    assert_eq!(frame.to_bytes().unwrap(), vec![0xe3, 0xdc, 0x00, 0x11, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2, 0x01, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0xfe, 0xfa, 0x84, 0x3c]);
 
     let frame = Frame {
         with_checksum: false,
-        time_stamp: DateTime::<Utc>::from_utc(
-            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
-            Utc,
-        ),
-        items: Some(Box::new(vec![Item {
-            tag: crate::tags::INFO::SERIAL_NUMBER.into(),
-            data: None,
-        }])),
+        time_stamp: DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(12345678, 123456), Utc),
+        items: Some(Box::new(vec![Item { tag: crate::tags::INFO::SERIAL_NUMBER.into(), data: None }]))
     };
-    assert_eq!(
-        frame.to_bytes().unwrap(),
-        vec![
-            0xe3, 0xdc, 0x00, 0x01, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2,
-            0x01, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00
-        ]
-    );
+    assert_eq!(frame.to_bytes().unwrap(), vec![0xe3, 0xdc, 0x00, 0x01, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2, 0x01, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00]);
 }
 
 #[test]
 fn test_from_bytes() {
-    let frame = Frame::from_bytes(vec![
-        0xe3, 0xdc, 0x00, 0x11, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2, 0x01,
-        0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0xfe, 0xfa, 0x84, 0x3c,
-    ])
-    .unwrap();
+    let frame = Frame::from_bytes(vec![0xe3, 0xdc, 0x00, 0x11, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2, 0x01, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0xfe, 0xfa, 0x84, 0x3c]).unwrap();
     assert_eq!(frame.with_checksum, true);
-    assert_eq!(
-        frame
-            .items
-            .unwrap()
-            .downcast_ref::<Vec<Item>>()
-            .unwrap()
-            .len(),
-        1
-    );
+    assert_eq!(frame.items.unwrap().downcast_ref::<Vec<Item>>().unwrap().len(), 1);
 
-    let frame = Frame::from_bytes(vec![
-        0xe3, 0xdc, 0x00, 0x01, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2, 0x01,
-        0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
-    ])
-    .unwrap();
+    let frame = Frame::from_bytes(vec![0xe3, 0xdc, 0x00, 0x01, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2, 0x01, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00]).unwrap();
     assert_eq!(frame.with_checksum, false);
 
     let frame_err = Frame::from_bytes(vec![0xaa, 0xdc, 0x00, 0x00]);
-    assert_eq!(
-        format!("{}", frame_err.unwrap_err().downcast::<Errors>().unwrap()),
-        "Frame parse error: Invalid magic header"
-    );
+    assert_eq!(format!("{}", frame_err.unwrap_err().downcast::<Errors>().unwrap()), "Frame parse error: Invalid magic header");
 
     let frame_err = Frame::from_bytes(vec![0xe3, 0xdc, 0x00, 0x00]);
-    assert_eq!(
-        format!("{}", frame_err.unwrap_err().downcast::<Errors>().unwrap()),
-        "Frame parse error: Invalid Protocol version, got 0"
-    );
+    assert_eq!(format!("{}", frame_err.unwrap_err().downcast::<Errors>().unwrap()), "Frame parse error: Invalid Protocol version, got 0");
 
-    let frame_err = Frame::from_bytes(vec![
-        0xe3, 0xdc, 0x00, 0x11, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2, 0x01,
-        0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0xfe, 0xfa, 0x84, 0x33,
-    ]);
-    assert_eq!(
-        format!("{}", frame_err.unwrap_err().downcast::<Errors>().unwrap()),
-        "Frame parse error: CRC Checksum missmatch, got 864353022 = 1015347966"
-    );
+    let frame_err = Frame::from_bytes(vec![0xe3, 0xdc, 0x00, 0x11, 0x4e, 0x61, 0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0xe2, 0x01, 0x00, 0x07, 0x00, 0x01, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0xfe, 0xfa, 0x84, 0x33]);
+    assert_eq!(format!("{}", frame_err.unwrap_err().downcast::<Errors>().unwrap()), "Frame parse error: CRC Checksum missmatch, got 864353022 = 1015347966");
 }
 
 #[test]
 fn test_debug_impl() {
     let frame = Frame {
         with_checksum: true,
-        time_stamp: DateTime::<Utc>::from_utc(
-            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
-            Utc,
-        ),
-        items: Some(Box::new(vec![Item {
-            tag: crate::tags::INFO::SERIAL_NUMBER.into(),
-            data: None,
-        }])),
+        time_stamp: DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(12345678, 123456), Utc),
+        items: Some(Box::new(vec![Item { tag: crate::tags::INFO::SERIAL_NUMBER.into(), data: None }]))
     };
     assert_eq!(format!("{:?}", frame), "Frame { time_stamp: 1970-05-23T21:21:18.000123456Z, items: [Item { tag: \"INFO_SERIAL_NUMBER\", data: \"None\" }] }");
 }
+
 #[test]
 fn test_clone_item_impl(){
      let frame = Frame {
@@ -404,25 +327,11 @@ fn test_clone_item_impl(){
 fn test_get_item_impl() {
     let frame = Frame {
         with_checksum: true,
-        time_stamp: DateTime::<Utc>::from_utc(
-            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
-            Utc,
-        ),
-        items: Some(Box::new(vec![Item::new(
-            crate::tags::INFO::SERIAL_NUMBER.into(),
-            "serial".to_string(),
-        )])),
+        time_stamp: DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(12345678, 123456), Utc),
+        items: Some(Box::new(vec![Item::new(crate::tags::INFO::SERIAL_NUMBER.into(), "serial".to_string())]))
     };
 
-    let item = frame
-        .get_item(crate::tags::INFO::SERIAL_NUMBER.into())
-        .unwrap();
+    let item = frame.get_item(crate::tags::INFO::SERIAL_NUMBER.into()).unwrap();
     assert_eq!(item.get_data::<String>().unwrap(), "serial");
-    assert_eq!(
-        frame
-            .get_item_data::<String>(crate::tags::INFO::SERIAL_NUMBER.into())
-            .unwrap(),
-        "serial"
-    );
+    assert_eq!(frame.get_item_data::<String>(crate::tags::INFO::SERIAL_NUMBER.into()).unwrap(), "serial");
 }
-
