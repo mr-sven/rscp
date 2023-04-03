@@ -144,10 +144,7 @@ impl Frame {
         // protocol version and checksum flag
         let prot_ver = buffer.read_le::<u8>()?;
         if prot_ver & PROTOCOL_VERSION_MASK != PROTOCOL_VERSION {
-            bail!(Errors::Parse(format!(
-                "Invalid Protocol version, got {:?}",
-                prot_ver
-            )))
+            bail!(Errors::Parse(format!("Invalid Protocol version, got {:?}", prot_ver)))
         }
 
         let with_checksum = if prot_ver & WITH_CHECKSUM == WITH_CHECKSUM {
@@ -181,10 +178,7 @@ impl Frame {
             // read checksum
             let cksum = buffer.read_le::<u32>()?;
             if cksum != sum {
-                bail!(Errors::Parse(format!(
-                    "CRC Checksum missmatch, got {:?} = {:?}",
-                    cksum, sum
-                )))
+                bail!(Errors::Parse(format!("CRC Checksum missmatch, got {:?} = {:?}", cksum, sum)))
             }
 
             // set position back to data
@@ -285,7 +279,7 @@ fn test_to_bytes() {
     let frame = Frame {
         with_checksum: true,
         time_stamp: DateTime::<Utc>::from_utc(
-            chrono::NaiveDateTime::from_timestamp(12345678, 123456),
+            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
             Utc,
         ),
         items: Some(Box::new(vec![Item {
@@ -305,7 +299,7 @@ fn test_to_bytes() {
     let frame = Frame {
         with_checksum: false,
         time_stamp: DateTime::<Utc>::from_utc(
-            chrono::NaiveDateTime::from_timestamp(12345678, 123456),
+            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
             Utc,
         ),
         items: Some(Box::new(vec![Item {
@@ -374,7 +368,7 @@ fn test_debug_impl() {
     let frame = Frame {
         with_checksum: true,
         time_stamp: DateTime::<Utc>::from_utc(
-            chrono::NaiveDateTime::from_timestamp(12345678, 123456),
+            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
             Utc,
         ),
         items: Some(Box::new(vec![Item {
@@ -384,13 +378,34 @@ fn test_debug_impl() {
     };
     assert_eq!(format!("{:?}", frame), "Frame { time_stamp: 1970-05-23T21:21:18.000123456Z, items: [Item { tag: \"INFO_SERIAL_NUMBER\", data: \"None\" }] }");
 }
+#[test]
+fn test_clone_item_impl(){
+     let frame = Frame {
+        with_checksum: true,
+        time_stamp: DateTime::<Utc>::from_utc(
+            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
+            Utc,
+        ),
+        items: Some(Box::new(vec![Item::new(
+            crate::tags::INFO::SERIAL_NUMBER.into(),
+            "serial".to_string(),
+        )])),
+    };
+    let clone_frame = frame.clone();
+    println!("{:?}", frame);
+    println!("{:?}",clone_frame);
+
+    assert_eq!(frame.time_stamp, clone_frame.time_stamp);
+    assert_eq!(frame.get_item_data::<String>(crate::tags::INFO::SERIAL_NUMBER.into()).unwrap(), clone_frame.get_item_data::<String>(crate::tags::INFO::SERIAL_NUMBER.into()).unwrap());
+    assert_eq!(frame.type_id(), clone_frame.type_id());
+}
 
 #[test]
 fn test_get_item_impl() {
     let frame = Frame {
         with_checksum: true,
         time_stamp: DateTime::<Utc>::from_utc(
-            chrono::NaiveDateTime::from_timestamp(12345678, 123456),
+            chrono::NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(),
             Utc,
         ),
         items: Some(Box::new(vec![Item::new(
@@ -410,3 +425,4 @@ fn test_get_item_impl() {
         "serial"
     );
 }
+
