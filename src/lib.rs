@@ -1,10 +1,6 @@
 #[macro_use]
 extern crate macro_attr;
 
-use anyhow::{anyhow, Result};
-use std::any::Any;
-use std::fmt::Debug;
-
 pub mod tags;
 
 mod client;
@@ -17,6 +13,8 @@ mod read_ext;
 mod user;
 
 pub use client::Client;
+pub use errors::{ErrorCode, Errors};
 pub use frame::Frame;
 pub use getitem::GetItem;
 pub use item::Item;
+pub use user::UserLevel;
