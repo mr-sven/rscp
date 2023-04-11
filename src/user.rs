@@ -50,11 +50,7 @@ user_level_ext! {
 fn test_user_level() {
     assert_eq!(UserLevel::from(10), UserLevel::User, "Test From<u8>");
     assert_eq!(Into::<u8>::into(UserLevel::User), 10, "Test Into<u8>");
-    assert_eq!(
-        UserLevel::from(0xfe),
-        UserLevel::Unknown,
-        "Test From Unknown<u8>"
-    );
+    assert_eq!(UserLevel::from(0xfe), UserLevel::Unknown, "Test From Unknown<u8>");
 
     let user_level = UserLevel::from(10);
 

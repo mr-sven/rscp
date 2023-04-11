@@ -75,10 +75,7 @@ impl std::fmt::Display for Errors {
 
 #[test]
 fn test_error_display_impl() {
-    assert_eq!(
-        format!("{}", Errors::Parse("test".to_string())),
-        "Frame parse error: test"
-    );
+    assert_eq!(format!("{}", Errors::Parse("test".to_string())), "Frame parse error: test");
     assert_eq!(format!("{}", Errors::ReceiveNothing), "Receive nothing");
     assert_eq!(format!("{}", Errors::AuthFailed), "Authentication failed");
     assert_eq!(format!("{}", Errors::NotConnected), "Not Connected");
@@ -86,21 +83,9 @@ fn test_error_display_impl() {
 
 #[test]
 fn test_error_code() {
-    assert_eq!(
-        ErrorCode::from(0x01u32),
-        ErrorCode::NotHandled,
-        "Test From<u32>"
-    );
-    assert_eq!(
-        Into::<u32>::into(ErrorCode::NotHandled),
-        0x01u32,
-        "Test Into<u32>"
-    );
-    assert_eq!(
-        ErrorCode::from(0xffffu32),
-        ErrorCode::Unknown,
-        "Test From Unknown<u32>"
-    );
+    assert_eq!(ErrorCode::from(0x01u32), ErrorCode::NotHandled, "Test From<u32>");
+    assert_eq!(Into::<u32>::into(ErrorCode::NotHandled), 0x01u32, "Test Into<u32>");
+    assert_eq!(ErrorCode::from(0xffffu32), ErrorCode::Unknown, "Test From Unknown<u32>");
 
     let error_code = ErrorCode::from(0x01u32);
 

@@ -1,15 +1,11 @@
-
-use anyhow::{Result, bail};
-use log::{info, debug};
-use std::io::{Write, Read};
-use std::net::{TcpStream, ToSocketAddrs, Shutdown};
-use std::sync::{Mutex, Arc};
+use anyhow::{bail, Result};
+use log::{debug, info};
+use std::io::{Read, Write};
+use std::net::{Shutdown, TcpStream, ToSocketAddrs};
+use std::sync::{Arc, Mutex};
 
 use crate::encryption::{RscpEncryption, BLOCK_SIZE};
-use crate::{tags, Item, Frame};
-use crate::GetItem;
-use crate::errors::Errors;
-use crate::user::UserLevel;
+use crate::{tags, Errors, Frame, GetItem, Item, UserLevel};
 
 /// default RSCP Port
 const DEFAULT_PORT: u16 = 5033;
@@ -34,15 +30,15 @@ pub struct Client {
 
 impl Client {
     /// returns RSCP Client
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `rscp_key` - RSCP encyption key
     /// * `username` - RSCP username
     /// * `password` - RSCP password
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use rscp;
     /// let mut c = rscp::Client::new("RSCP_KEY", "RSCP_USER".to_string(), "RSCP_PASSWORD".to_string());
@@ -53,19 +49,19 @@ impl Client {
             connection: None,
             enc_processor: RscpEncryption::new(rscp_key),
             username: username,
-            password
+            password,
         }
     }
 
     /// Connects to given host
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `host` - Host addess of energy storage
     /// * `port` - Optional port, default 5033
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```no_run
     /// use rscp;
     /// let mut c = rscp::Client::new("RSCP_KEY", "RSCP_USER".to_string(), "RSCP_PASSWORD".to_string());
@@ -87,7 +83,7 @@ impl Client {
         self.connected = true;
         self.connection = Some(Arc::new(Mutex::new(stream)));
         info!("Connected");
-        
+
         let mut frame = Frame::new();
         frame.push_item(Item::new(tags::RSCP::AUTHENTICATION.into(), vec![
             Item::new(tags::RSCP::AUTHENTICATION_USER.into(), self.username.to_string()),
@@ -96,17 +92,17 @@ impl Client {
 
         info!("Authenticate");
         match self.send_receive_frame(&frame) {
-            Ok(result_frame) => { 
+            Ok(result_frame) => {
                 let user_level = result_frame.get_item_data::<u8>(tags::RSCP::AUTHENTICATION.into()).unwrap();
                 let user_level_type = UserLevel::from(user_level.clone());
                 info!("Authenticated as {:?}", user_level_type);
-            },
+            }
             Err(_) => {
                 self.disconnect()?;
                 bail!(Errors::AuthFailed)
             }
-        }        
-        
+        }
+
         Ok(())
     }
 
@@ -118,13 +114,13 @@ impl Client {
     }
 
     /// Sends and receives frame from connection
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `frame` - frame to send
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```no_run
     /// use rscp;
     /// use rscp::GetItem;
@@ -135,10 +131,10 @@ impl Client {
     ///         panic!("Unable to connect: {:?}", err);
     ///     }
     /// }
-    /// 
+    ///
     /// let mut info_frame = rscp::Frame::new();
     /// info_frame.push_item(rscp::Item { tag: rscp::tags::INFO::SERIAL_NUMBER.into(), data: None } );
-    /// 
+    ///
     /// match c.send_receive_frame(&info_frame) {
     ///     Ok(result_frame) => {
     ///         println!("{}", result_frame.get_item_data::<String>(rscp::tags::INFO::SERIAL_NUMBER.into()).unwrap());
@@ -170,9 +166,9 @@ impl Client {
     }
 
     /// writes data to stream
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `data` - data to send
     fn write_to_stream(&mut self, data: &[u8]) -> Result<()> {
         if !self.connected {
@@ -189,14 +185,20 @@ impl Client {
         }
         let mut buffer = [0 as u8; BLOCK_SIZE];
         let mut data: Vec<u8> = Vec::new();
-        loop
-        {
+        loop {
             match self.connection.as_mut().unwrap().as_ref().lock().unwrap().read_exact(&mut buffer) {
-                Ok(_) => { data.extend_from_slice(&buffer); },
-                Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => { break; },
-                Err(_) => { break; } //return Err(anyhow!("error receiving data: {}", e))
+                Ok(_) => {
+                    data.extend_from_slice(&buffer);
+                }
+                Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => {
+                    break;
+                }
+                Err(_) => {
+                    break;
+                    //return Err(anyhow!("error receiving data: {}", e))
+                }
             }
-        };
+        }
         Ok(data)
     }
 }

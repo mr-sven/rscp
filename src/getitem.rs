@@ -1,6 +1,6 @@
-use crate::item::Item;
+use crate::Item;
 use anyhow::{anyhow, Result};
-use std::any::{Any, TypeId};
+use std::any::Any;
 
 /// Item and data getter for Frame and Item
 pub trait GetItem {
@@ -67,12 +67,6 @@ impl GetItem for Option<Box<dyn Any>> {
 
     fn get_item_data<T: 'static + Sized>(&self, tag: u32) -> Result<&T> {
         let item = self.get_item(tag)?;
-        Ok(item
-            .data
-            .as_ref()
-            .unwrap()
-            .as_ref()
-            .downcast_ref::<T>()
-            .unwrap())
+        Ok(item.data.as_ref().unwrap().as_ref().downcast_ref::<T>().unwrap())
     }
 }

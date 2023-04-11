@@ -12,18 +12,18 @@ macro_rules! group_list {
         }
 
         /// Returns the name of the selected enum by id
-        /// 
+        ///
         /// # Arguments
-        /// 
+        ///
         /// * `id` - the id of the tag
-        /// 
+        ///
         /// # Examples
-        /// 
+        ///
         /// ```
         /// use rscp::tags::TagGroup;
         /// let rscp_group = TagGroup::from(0x00);
         /// println!("{}", rscp_group.tags(0x00000004)); // USER_LEVEL
-        /// ``` 
+        /// ```
         impl $name {
             pub fn tags(&self, id: u32) -> String {
                 match self {
@@ -129,7 +129,7 @@ group_list! {
         OVP = 0x22,
 
         SERVER = 0xf8,
-        GROUP = 0xfc,       
+        GROUP = 0xfc,
 
         UNKNOWN = 0xff
     }
@@ -144,7 +144,6 @@ macro_attr! {
         GENERAL_ERROR = 0x7fffff
     }
 }
-
 
 macro_attr! {
     #[group!(TagGroup::RSCP)]
