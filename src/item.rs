@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use std::any::{Any, TypeId};
 use std::fmt::Debug;
 use std::io::{Read, Write};
@@ -461,7 +461,7 @@ pub fn write_timestamp<W: Write>(writer: &mut W, date_time: &DateTime<Utc>) -> R
 pub fn read_timestamp<R: Read>(reader: &mut R) -> Result<DateTime<Utc>> {
     let seconds = reader.read_le::<i64>()?;
     let nanos = reader.read_le::<u32>()?;
-    Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(seconds, nanos).unwrap(), Utc))
+    Ok(Utc.from_utc_datetime(&NaiveDateTime::from_timestamp_opt(seconds, nanos).unwrap()))
 }
 
 /// ################################################
