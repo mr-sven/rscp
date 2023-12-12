@@ -1,6 +1,6 @@
 [package]
 name = "rscp"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Sven Fabricius <sven.fabricius@livediesel.de>", "Vitaliy Schreibmann"]
 edition = "2021"
 license = "MIT"
@@ -18,7 +18,7 @@ path = "src/lib.rs"
 anyhow = "1.0"
 
 # logging
-log = "0.4.17"
+log = "0.4.20"
 
 # used in tags for enum extensions
 macro-attr = "0.2.0"
