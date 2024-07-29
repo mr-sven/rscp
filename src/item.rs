@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use std::any::{Any, TypeId};
 use std::fmt::Debug;
 use std::io::{Read, Write};
@@ -461,7 +461,7 @@ pub fn write_timestamp<W: Write>(writer: &mut W, date_time: &DateTime<Utc>) -> R
 pub fn read_timestamp<R: Read>(reader: &mut R) -> Result<DateTime<Utc>> {
     let seconds = reader.read_le::<i64>()?;
     let nanos = reader.read_le::<u32>()?;
-    Ok(Utc.from_utc_datetime(&NaiveDateTime::from_timestamp_opt(seconds, nanos).unwrap()))
+    Ok(DateTime::<Utc>::from_timestamp(seconds, nanos).unwrap())
 }
 
 /// ################################################
@@ -605,7 +605,7 @@ macro_rules! test_data_cases {
             },
             TestData {
                 data_type: DataType::Timestamp,
-                data: Some(Box::new(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(), Utc))),
+                data: Some(Box::new(DateTime::<Utc>::from_timestamp(12345678, 123456).unwrap())),
                 byte_data: vec![0x00, 0x00, 0x00, 0x00, 0x0f, 0x0c, 0x00, 78, 97, 188, 0, 0, 0, 0, 0, 64, 226, 1, 0],
                 data_size: (mem::size_of::<i64>() + mem::size_of::<i32>()) as u16,
                 item_str: "Item { tag: \"RSCP_GENERAL_ERROR\", data: 1970-05-23T21:21:18.000123456Z }",
@@ -757,7 +757,7 @@ fn test_read_bitfield() {
 #[test]
 fn test_write_timestamp() {
     let mut buffer: std::io::Cursor<Vec<u8>> = std::io::Cursor::new(Vec::new());
-    write_timestamp(&mut buffer, &DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(12345678, 123456).unwrap(), Utc)).unwrap();
+    write_timestamp(&mut buffer, &DateTime::<Utc>::from_timestamp(12345678, 123456).unwrap()).unwrap();
     assert_eq!(buffer.get_ref().to_vec(), vec![78, 97, 188, 0, 0, 0, 0, 0, 64, 226, 1, 0]);
 }
 
