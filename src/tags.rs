@@ -3309,5 +3309,6 @@ fn test_tag_group() {
 fn test_tag_groups() {
     assert_eq!(TagGroup::from(0x00), TagGroup::RSCP, "Test From<u8>");
     assert_eq!(TagGroup::RSCP.tags(0x01u32), "RSCP_AUTHENTICATION", "Test tags(u32)");
-    assert_eq!(TagGroup::from(0xfe), TagGroup::UNKNOWN, "Test From Unknown<u32>");
+    // 0xee is currently unused
+    assert_eq!(TagGroup::from(0xee), TagGroup::UNKNOWN, "Test From Unknown<u32>");
 }
