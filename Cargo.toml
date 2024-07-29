@@ -1,6 +1,6 @@
 [package]
 name = "rscp"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["Sven Fabricius <sven.fabricius@livediesel.de>", "Vitaliy Schreibmann"]
 edition = "2021"
 license = "MIT"
