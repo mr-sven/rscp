@@ -79,7 +79,7 @@ impl Client {
         info!("Connect to {}:{}", host, host_port);
 
         let stream = TcpStream::connect(addr)?;
-        stream.set_read_timeout(Some(std::time::Duration::from_millis(500)))?;
+        stream.set_read_timeout(Some(std::time::Duration::from_secs(10)))?;
         self.connected = true;
         self.connection = Some(Arc::new(Mutex::new(stream)));
         info!("Connected");
@@ -183,22 +183,33 @@ impl Client {
         if !self.connected {
             bail!(Errors::NotConnected)
         }
-        let mut buffer = [0 as u8; BLOCK_SIZE];
+        const NUM_BLOCKS: usize = 8;
+        const BUFFER_SIZE_FIRST: usize = NUM_BLOCKS * BLOCK_SIZE + (BLOCK_SIZE / 2);
+        const BUFFER_SIZE: usize = NUM_BLOCKS * BLOCK_SIZE;
+
+        let mut buffer = [0 as u8; BUFFER_SIZE_FIRST];
         let mut data: Vec<u8> = Vec::new();
+
+        let conn = self.connection.as_mut().unwrap();
+        let mut stream = conn.as_ref().lock().unwrap();
+        let mut read_max = BUFFER_SIZE_FIRST;
+
         loop {
-            match self.connection.as_mut().unwrap().as_ref().lock().unwrap().read_exact(&mut buffer) {
-                Ok(_) => {
-                    data.extend_from_slice(&buffer);
+            match stream.read(&mut buffer[..read_max]) {
+                Ok(0) => break,
+                Ok(n) => {
+                    data.extend_from_slice(&buffer[..n]);
+                    if n < read_max {
+                        break;
+                    }
                 }
-                Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => {
-                    break;
-                }
-                Err(_) => {
-                    break;
-                    //return Err(anyhow!("error receiving data: {}", e))
-                }
+                Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => break,
+                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+                Err(e) => bail!(e),
             }
+            read_max = BUFFER_SIZE;
         }
+
         Ok(data)
     }
 }
