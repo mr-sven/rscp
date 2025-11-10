@@ -165,6 +165,19 @@ impl Client {
         Ok(result_frame)
     }
 
+    pub fn send_receive_frame_data(&mut self, data: Vec<u8>) -> Result<Vec<u8>> {
+        let enc_data = self.enc_processor.encrypt(data)?;
+
+        self.write_to_stream(&enc_data)?;
+        let return_enc_data = self.read_from_stream()?;
+        if return_enc_data.len() == 0 {
+            bail!(Errors::ReceiveNothing)
+        }
+
+        let return_data = self.enc_processor.decrypt(return_enc_data)?;
+        Ok(return_data)
+    }
+
     /// writes data to stream
     ///
     /// # Arguments
