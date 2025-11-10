@@ -52,7 +52,11 @@ pub trait GetItem {
 /// implementation for data object
 impl GetItem for Option<Box<dyn Any>> {
     fn get_data<T: 'static + Sized>(&self) -> Result<&T> {
-        Ok(self.as_ref().unwrap().as_ref().downcast_ref::<T>().unwrap())
+        if let Some(data) = self.as_ref().unwrap().downcast_ref::<T>() {
+            Ok(data)
+        } else {
+            Err(anyhow!("Failed to downcast"))
+        }
     }
 
     fn get_item(&self, tag: u32) -> Result<&Item> {
@@ -67,6 +71,11 @@ impl GetItem for Option<Box<dyn Any>> {
 
     fn get_item_data<T: 'static + Sized>(&self, tag: u32) -> Result<&T> {
         let item = self.get_item(tag)?;
-        Ok(item.data.as_ref().unwrap().as_ref().downcast_ref::<T>().unwrap())
+
+        if let Some(data) = item.data.as_ref().unwrap().as_ref().downcast_ref::<T>() {
+            Ok(data)
+        } else {
+            Err(anyhow!("Failed to downcast"))
+        }
     }
 }
