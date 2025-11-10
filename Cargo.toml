@@ -1,8 +1,8 @@
 [package]
 name = "rscp"
-version = "0.1.7"
+version = "0.2.0"
 authors = ["Sven Fabricius <sven.fabricius@livediesel.de>", "Vitaliy Schreibmann"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/mr-sven/rscp"
@@ -18,7 +18,7 @@ path = "src/lib.rs"
 anyhow = "1.0"
 
 # logging
-log = "0.4.20"
+log = "0.4"
 
 # used in tags for enum extensions
 macro-attr = "0.2.0"
@@ -26,4 +26,11 @@ macro-attr = "0.2.0"
 # rscp stuff
 simple-rijndael = "0.3.2"
 chrono = "0.4"
-crc = "3.0"
+crc = "3.3"
+
+
+[profile.release]
+# v This is now used by default, if not provided
+strip = true
+opt-level = "z"
+lto = true

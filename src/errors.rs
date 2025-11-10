@@ -61,7 +61,7 @@ impl std::error::Error for Errors {}
 impl std::fmt::Display for Errors {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Errors::Parse(ref msg) => write!(f, "Frame parse error: {}", msg),
+            Errors::Parse(msg) => write!(f, "Frame parse error: {}", msg),
             Errors::ReceiveNothing => write!(f, "Receive nothing"),
             Errors::AuthFailed => write!(f, "Authentication failed"),
             Errors::NotConnected => write!(f, "Not Connected"),
